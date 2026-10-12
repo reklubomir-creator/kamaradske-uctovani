@@ -235,7 +235,7 @@ main.wrap{width:100%;overflow-x:clip}
 <body>
 <header class="top"><div class="top-inner"><h1>Kamarádské účtování</h1><p>Jednoduše zjisti, kdo platil, kdo kolik dluží a jak to vyrovnat.</p></div></header>
 <main class="wrap">
-<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
+<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
@@ -250,7 +250,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-34</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-35</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -369,6 +369,46 @@ function activateGroup(id){
  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
+document.getElementById('deleteGroup').addEventListener('click',async()=>{
+ const groupName=state.name;
+ const isShared=Boolean(remoteToken);
+ const warning=isShared
+  ? 'Opravdu chceš trvale smazat skupinu „'+groupName+'“? Smažou se její online data, členové i výdaje a původní sdílecí odkaz přestane fungovat. Tuto akci nelze vrátit.'
+  : 'Opravdu chceš smazat skupinu „'+groupName+'“ v tomto prohlížeči? Odstraní se její členové i výdaje. Tuto akci nelze vrátit.';
+ if(!confirm(warning))return;
+ const button=document.getElementById('deleteGroup');button.disabled=true;
+ try{
+  if(isShared){
+   setSyncStatus('Mažu sdílenou skupinu online…');
+   const result=await jsonp({action:'delete',token:remoteToken});
+   if(!result||!result.ok)throw new Error(result?.error||'Online databáze skupinu nesmazala. Aktualizuj Apps Script o podporu mazání skupin a zkus to znovu.');
+  }
+  const removedId=activeGroupId;
+  database.groups=database.groups.filter(g=>g.id!==removedId);
+  delete remoteTokens[removedId];
+  if(!database.groups.length){
+   const replacement=emptyGroup('Moje skupina');
+   database.groups.push(replacement);
+   activeGroupId=replacement.id;
+  }else{
+   activeGroupId=database.groups[0].id;
+  }
+  state=database.groups.find(g=>g.id===activeGroupId);
+  remoteToken=remoteTokens[activeGroupId]||'';
+  persistDatabase();
+  localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
+  const url=new URL(location.href);url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
+  document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();
+  render();updatePageTitle();document.getElementById('copyShareLink').hidden=!remoteToken;
+  setSyncStatus(isShared?'Skupina byla smazána i z online databáze.':'Skupina byla smazána z tohoto prohlížeče.');
+  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click();
+  alert('Skupina „'+groupName+'“ byla smazána.');
+ }catch(err){
+  setSyncStatus('Skupinu se nepodařilo smazat: '+err.message);
+  alert('Skupinu se nepodařilo smazat. '+err.message);
+ }finally{button.disabled=false}
+});
+
 document.getElementById('renameGroup').addEventListener('click',()=>{const raw=prompt('Nový název skupiny:',state.name);if(raw===null)return;const name=raw.trim();if(!name){alert('Název skupiny nesmí být prázdný.');return}if(database.groups.some(g=>g.id!==activeGroupId&&g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}state.name=name;save();updatePageTitle();if(remoteToken)updateShareUrl();document.getElementById('groupSwitcher').open=false});
 document.getElementById('addGroup').addEventListener('click',()=>{const raw=prompt('Jak se bude nová skupina jmenovat?','Nová skupina');if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}if(database.groups.some(g=>g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}const group=emptyGroup(name);const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;database.groups.push(group);activateGroup(group.id)});
 document.getElementById('personForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('personName').value.trim();if(!name)return;if(state.people.some(p=>p.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Člen s tímto jménem už existuje.');return}state.people.push({id:crypto.randomUUID(),name,share:1});e.target.reset();save()});
