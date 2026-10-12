@@ -76,6 +76,40 @@ button{touch-action:manipulation}
   .item{flex-wrap:wrap}
   .item>div:last-child{width:100%;justify-content:space-between}
 }
+
+.overview-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.overview-actions>.primary{align-self:flex-start}
+.reset-box{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px;background:#fff;border:1px solid #f0d7d5;border-radius:14px}
+.reset-box p{margin:4px 0 0;max-width:600px}
+.reset-box .danger{flex-shrink:0}
+.pdf-report{display:none}
+@media(max-width:540px){.overview-actions>.primary{width:100%}.reset-box{align-items:stretch;flex-direction:column}.reset-box .danger{width:100%}}
+@media print{
+  @page{size:A4;margin:15mm}
+  body{background:#fff!important;color:#1d302b!important;font-size:11pt}
+  body>*{display:none!important}
+  body>#pdfReport{display:block!important}
+  #pdfReport{display:block!important;font-family:Arial,Helvetica,sans-serif}
+  #pdfReport .report-header{background:#173f35!important;color:#fff!important;padding:24px;border-radius:12px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  #pdfReport h1{font-size:25pt;margin:0 0 5px}
+  #pdfReport h2{font-size:15pt;margin:20px 0 10px;border-bottom:1px solid #dce5df;padding-bottom:6px}
+  #pdfReport .report-sub{opacity:.9}
+  #pdfReport .report-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+  #pdfReport .report-stat{border:1px solid #dce5df;border-radius:9px;padding:12px}
+  #pdfReport .report-stat small{display:block;color:#697a74;font-size:9pt}
+  #pdfReport .report-stat strong{display:block;font-size:17pt;margin-top:5px}
+  #pdfReport .report-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  #pdfReport .report-panel{border:1px solid #dce5df;border-radius:9px;padding:12px;break-inside:avoid}
+  #pdfReport .report-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #edf1ee}
+  #pdfReport .report-row:last-child{border-bottom:0}
+  #pdfReport .report-chart-row{display:grid;grid-template-columns:100px 1fr 72px;align-items:center;gap:8px;margin:10px 0;font-size:9pt}
+  #pdfReport .report-bar-bg{height:11px;background:#e8efeb;border-radius:20px;overflow:hidden}
+  #pdfReport .report-bar{height:100%;background:#398363;border-radius:20px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  #pdfReport .report-empty{color:#697a74;padding:10px 0}
+  #pdfReport .report-footer{margin-top:22px;color:#697a74;font-size:9pt;border-top:1px solid #dce5df;padding-top:8px}
+  #pdfReport .positive{color:#23734e!important}
+  #pdfReport .negative{color:#b94747!important}
+}
 </style>
 </head>
 <body>
@@ -85,12 +119,18 @@ button{touch-action:manipulation}
 <section id="overview" class="panel">
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
+<div class="overview-actions">
+  <button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button>
+  <p class="muted">Vytvoří přehled skupiny s bilancí, doporučeným vyrovnáním a grafy. V dialogu tisku vyber „Uložit jako PDF“.</p>
+  <div class="reset-box"><div><strong>Vymazat výdaje skupiny</strong><p class="muted">Odstraní všechny výdaje a vyrovnání v této skupině. Název skupiny a jména členů zůstanou zachována.</p></div><button class="danger" id="clearExpenses" type="button">Vymazat data</button></div>
+</div>
 </section>
+<section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
 <section id="expenses" class="panel hidden"><div class="grid"><div class="card"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2>Nový výdaj</h2><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Za koho se výdaj počítá? Zaškrtni účastníky a případně uprav jejich podíl pro tuto platbu.</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><button class="primary full" type="submit">Uložit výdaj</button></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>První prototyp:</strong> data se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Ostatní členové skupiny je ještě neuvidí. Sdílení přes odkaz a online synchronizaci doplníme po připojení databáze.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-16</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-17</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -133,6 +173,35 @@ document.getElementById('expenseForm').addEventListener('invalid',e=>{e.preventD
 document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('amount').value),participants=[...document.querySelectorAll('input[name="participant"]:checked')].map(x=>x.value),payer=document.getElementById('payer').value;if(!Number.isFinite(amount)||amount<=0||!payer||!participants.length){alert('Zadej platnou částku, plátce a alespoň jednoho účastníka.');return}const shares={};for(const id of participants){const input=document.querySelector('[name="share_'+CSS.escape(id)+'"]');const n=parseDecimal(input?.value);if(!Number.isFinite(n)||n<=0){alert('Podíl každého vybraného účastníka musí být větší než nula.');return}shares[id]=n}const description=document.getElementById('description').value.trim();state.expenses.push({id:crypto.randomUUID(),description,amount,payer,participants,shares,date:document.getElementById('date').value||today()});e.target.reset();document.getElementById('date').value=today();save();const success=document.getElementById('expenseSuccess');success.textContent='✓ Výdaj „'+description+'“ byl uložen ('+money(amount)+').';success.classList.add('show');document.getElementById('expenses').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>success.classList.remove('show'),6000);});
 document.addEventListener('change',e=>{const input=e.target.closest('[data-person-share]');if(!input)return;const n=parseDecimal(input.value);if(!Number.isFinite(n)||n<=0){alert('Výchozí podíl musí být větší než nula.');input.value=state.people.find(p=>p.id===input.dataset.personShare)?.share||1;return}const person=state.people.find(p=>p.id===input.dataset.personShare);if(person){person.share=n;save()}});
 document.addEventListener('click',e=>{const ex=e.target.closest('[data-remove-expense]');if(ex){const id=ex.dataset.removeExpense;if(confirm('Opravdu smazat tento výdaj?')){state.expenses=state.expenses.filter(x=>x.id!==id);save()}return}const pe=e.target.closest('[data-remove-person]');if(pe){const id=pe.dataset.removePerson;if(state.expenses.some(x=>x.payer===id||x.participants.includes(id))){alert('Tohoto člena nelze odebrat, protože je uveden u některého výdaje.');return}if(confirm('Odebrat člena ze skupiny?')){state.people=state.people.filter(p=>p.id!==id);save()}}});
+
+function buildPdfReport(){
+ const total=state.expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
+ const bal=balances(), transfers=settlements();
+ const fmtDate=d=>{if(!d)return '—';const parts=d.split('-');return parts.length===3?parts.reverse().join('. '):d};
+ const months={};
+ state.expenses.forEach(e=>{const key=(e.date||'').slice(0,7)||'Bez data';months[key]=(months[key]||0)+(Number(e.amount)||0)});
+ const monthRows=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+ const paid=state.people.map(p=>({name:p.name,amount:state.expenses.filter(e=>e.payer===p.id).reduce((sum,e)=>sum+(Number(e.amount)||0),0)})).sort((a,b)=>b.amount-a.amount);
+ const maxMonth=Math.max(1,...monthRows.map(x=>x[1])),maxPaid=Math.max(1,...paid.map(x=>x.amount));
+ const chart=(items,max)=>items.length?items.map(([name,value])=>'<div class="report-chart-row"><span>'+esc(name)+'</span><div class="report-bar-bg"><div class="report-bar" style="width:'+Math.max(0,Math.min(100,value/max*100))+'%"></div></div><strong>'+money(value)+'</strong></div>').join(''):'<div class="report-empty">Zatím nejsou k dispozici žádná data.</div>';
+ document.getElementById('pdfReport').innerHTML=
+ '<div class="report-header"><h1>Kamarádské účtování</h1><div class="report-sub">Finanční přehled skupiny <strong>'+esc(state.name)+'</strong></div><div class="report-sub">Vygenerováno '+fmtDate(today())+'</div></div>'+
+ '<div class="report-stats"><div class="report-stat"><small>Celkové výdaje</small><strong>'+money(total)+'</strong></div><div class="report-stat"><small>Počet výdajů</small><strong>'+state.expenses.length+'</strong></div><div class="report-stat"><small>Členové skupiny</small><strong>'+state.people.length+'</strong></div></div>'+
+ '<h2>Bilance členů</h2><div class="report-panel">'+(state.people.length?state.people.map(p=>'<div class="report-row"><span>'+esc(p.name)+'</span><strong class="'+((bal[p.id]||0)>.005?'positive':(bal[p.id]||0)<-.005?'negative':'')+'">'+((bal[p.id]||0)>.005?'+':'')+money(bal[p.id]||0)+'</strong></div>').join(''):'<div class="report-empty">Skupina zatím nemá žádné členy.</div>')+'</div>'+
+ '<h2>Doporučené vyrovnání</h2><div class="report-panel">'+(transfers.length?transfers.map(t=>'<div class="report-row"><span>'+esc(t.from)+' → '+esc(t.to)+'</span><strong>'+money(t.amount)+'</strong></div>').join(''):'<div class="report-empty">Zatím není co vyrovnávat.</div>')+'</div>'+
+ '<div class="report-columns"><div><h2>Výdaje v čase</h2><div class="report-panel">'+chart(monthRows.map(([k,v])=>[k==='Bez data'?k:k.split('-').reverse().join('/'),v]),maxMonth)+'</div></div><div><h2>Kdo kolik zaplatil</h2><div class="report-panel">'+chart(paid.map(p=>[p.name,p.amount]),maxPaid)+'</div></div></div>'+
+ '<h2>Přehled výdajů</h2><div class="report-panel">'+(state.expenses.length?[...state.expenses].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>{const p=state.people.find(x=>x.id===e.payer);return '<div class="report-row"><span><strong>'+esc(e.description)+'</strong><br><small>'+esc(p?.name||'Neznámý člen')+' · '+fmtDate(e.date)+'</small></span><strong>'+money(e.amount)+'</strong></div>'}).join(''):'<div class="report-empty">Zatím nejsou zadané žádné výdaje.</div>')+'</div>'+
+ '<div class="report-footer">Vygenerováno aplikací Kamarádské účtování · Částky jsou uvedeny v Kč.</div>';
+}
+document.getElementById('exportPdf').addEventListener('click',()=>{buildPdfReport();window.print()});
+document.getElementById('clearExpenses').addEventListener('click',()=>{
+ if(!confirm('Opravdu chceš vymazat všechny výdaje a vyúčtování této skupiny? Tuto akci nelze vrátit. Název skupiny a jména členů zůstanou zachována.'))return;
+ state.expenses=[];
+ state.people.forEach(p=>{p.share=1});
+ save();
+ alert('Výdaje byly vymazány. Název skupiny a jména členů zůstaly zachovány.');
+});
+
 document.getElementById('date').value=today();
 // Výchozí podíl se použije pro nové platby; historické platby bez uložených podílů zůstávají rozdělené rovným dílem.
 state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();
