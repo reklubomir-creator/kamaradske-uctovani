@@ -243,7 +243,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-29</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-30</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -262,6 +262,14 @@ if(database&&Array.isArray(database.groups)&&database.groups.length){
 }
 state=database.groups.find(g=>g.id===activeGroupId);
 const persistDatabase=()=>{database.activeGroupId=activeGroupId;localStorage.setItem(KEY,JSON.stringify(database))};
+function slugifyName(value){return String(value||'skupina').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'skupina'}
+function updatePageTitle(){document.title=state&&state.name?state.name+' | Kamarádské účtování':'Kamarádské účtování'}
+function updateShareUrl(){
+ const url=new URL(location.href);
+ if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
+ else url.searchParams.delete('nazev');
+ history.replaceState({},'',url.href);
+}
 const parseDecimal=v=>Number(String(v??'').trim().replace(/\s/g,'').replace(',','.'));
 const money=n=>new Intl.NumberFormat('cs-CZ',{style:'currency',currency:'CZK',maximumFractionDigits:2}).format(n);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -345,14 +353,15 @@ function activateGroup(id){
  remoteToken=remoteTokens[activeGroupId]||'';
  const url=new URL(location.href);
  if(remoteToken)url.searchParams.set('group',remoteToken);else url.searchParams.delete('group');
+ if(remoteToken)url.searchParams.set('nazev',slugifyName(state.name));else url.searchParams.delete('nazev');
  history.replaceState({},'',url.href);
- persistDatabase();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();
+ persistDatabase();updatePageTitle();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();
  document.getElementById('copyShareLink').hidden=!remoteToken;
  setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
-document.getElementById('renameGroup').addEventListener('click',()=>{const raw=prompt('Nový název skupiny:',state.name);if(raw===null)return;const name=raw.trim();if(!name){alert('Název skupiny nesmí být prázdný.');return}if(database.groups.some(g=>g.id!==activeGroupId&&g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}state.name=name;save();document.getElementById('groupSwitcher').open=false});
+document.getElementById('renameGroup').addEventListener('click',()=>{const raw=prompt('Nový název skupiny:',state.name);if(raw===null)return;const name=raw.trim();if(!name){alert('Název skupiny nesmí být prázdný.');return}if(database.groups.some(g=>g.id!==activeGroupId&&g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}state.name=name;save();updatePageTitle();if(remoteToken)updateShareUrl();document.getElementById('groupSwitcher').open=false});
 document.getElementById('addGroup').addEventListener('click',()=>{const raw=prompt('Jak se bude nová skupina jmenovat?','Nová skupina');if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}if(database.groups.some(g=>g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}const group=emptyGroup(name);const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;database.groups.push(group);activateGroup(group.id)});
 document.getElementById('personForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('personName').value.trim();if(!name)return;if(state.people.some(p=>p.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Člen s tímto jménem už existuje.');return}state.people.push({id:crypto.randomUUID(),name,share:1});e.target.reset();save()});
 document.getElementById('expenseForm').addEventListener('invalid',e=>{e.preventDefault();const el=e.target;const label=el.labels?.[0]?.textContent||el.getAttribute('aria-label')||el.name||el.id||'neznámé pole';alert('Zkontroluj pole „'+label+'“. Hodnota není platná.');el.focus()},true);
@@ -436,13 +445,14 @@ document.getElementById('clearExpenses').addEventListener('click',()=>{
 
 document.getElementById('date').value=today();
 // Výchozí podíl se použije pro nové platby; historické platby bez uložených podílů zůstávají rozdělené rovným dílem.
-state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();
+state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();updatePageTitle();
 
 document.getElementById('shareGroup').addEventListener('click',async()=>{
  const button=document.getElementById('shareGroup');button.disabled=true;
  try{
   if(remoteToken){
-   const url=new URL(location.href);url.searchParams.set('group',remoteToken);
+   const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
+   history.replaceState({},'',url.href);
    await navigator.clipboard?.writeText(url.href).catch(()=>{});
    document.getElementById('copyShareLink').hidden=false;
    setSyncStatus('Tato skupina už má sdílecí odkaz. Použij „Kopírovat odkaz“.');
@@ -454,7 +464,7 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
   if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
   remoteToken=created.group.token;rememberRemoteToken(activeGroupId,remoteToken);
   await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses});
-  const url=new URL(location.href);url.searchParams.set('group',remoteToken);
+  const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
   history.replaceState({},'',url.href);
   document.getElementById('copyShareLink').hidden=false;
   setSyncStatus('Skupina je online. Odkaz můžeš poslat ostatním členům.');
@@ -466,7 +476,7 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
  finally{button.disabled=false}
 });
 document.getElementById('copyShareLink').addEventListener('click',async()=>{
- const url=new URL(location.href);if(remoteToken)url.searchParams.set('group',remoteToken);
+ const url=new URL(location.href);if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
  try{await navigator.clipboard.writeText(url.href);setSyncStatus('Sdílecí odkaz je zkopírovaný.')}
  catch{prompt('Zkopíruj tento odkaz:',url.href)}
 });
@@ -486,7 +496,7 @@ async function loadSharedGroup(){
   if(i>=0)database.groups[i]=group;else database.groups.push(group);
   state=group;database.activeGroupId=group.id;activeGroupId=group.id;
   rememberRemoteToken(activeGroupId,token);remoteToken=token;
-  persistDatabase();render();
+  persistDatabase();render();updatePageTitle();updateShareUrl();
   document.getElementById('copyShareLink').hidden=false;
   setSyncStatus('Připojeno ke sdílené skupině „'+group.name+'“. Změny se ukládají online.');
  }catch(err){setSyncStatus('Sdílenou skupinu se nepodařilo načíst: '+err.message);alert('Odkaz na sdílenou skupinu nefunguje. '+err.message)}
