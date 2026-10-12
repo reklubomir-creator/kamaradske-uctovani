@@ -237,7 +237,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>První prototyp:</strong> data se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Ostatní členové skupiny je ještě neuvidí. Sdílení přes odkaz a online synchronizaci doplníme po připojení databáze.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-20</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-21</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -321,9 +321,26 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
    report.style.display='block';report.style.position='absolute';report.style.left='0';report.style.top='0';report.style.width='900px';report.style.zIndex='-1';report.style.background='#fff';report.style.padding='20px';
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
    const canvas=await window.html2canvas(report,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,windowWidth:1000});
-   const link=document.createElement('a');
-   link.download='kamaradske-uctovani-'+state.name.trim().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png';
-   link.href=canvas.toDataURL('image/png');link.click();
+   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('PNG se nepodařilo vytvořit.')),'image/png'));
+   const imageUrl=URL.createObjectURL(blob);
+   const filename='kamaradske-uctovani-'+state.name.trim().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png';
+   const previous=document.getElementById('imageExportDialog');if(previous){const oldUrl=previous.dataset.objectUrl;previous.remove();if(oldUrl)URL.revokeObjectURL(oldUrl)}
+   const dialog=document.createElement('div');dialog.id='imageExportDialog';dialog.dataset.objectUrl=imageUrl;
+   dialog.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(12,28,22,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+   dialog.innerHTML='<div style="background:#fff;color:#1d302b;border-radius:16px;padding:18px;width:min(100%,620px);max-height:90vh;overflow:auto;box-shadow:0 12px 50px #0004"><h2 style="margin:0 0 6px;font-size:20px">Obrázek je připravený</h2><p style="margin:0 0 14px;color:#697a74;font-size:14px">Na iPhonu klepni na „Sdílet / uložit PNG“ a v nabídce vyber například „Uložit obrázek“ nebo „Uložit do Souborů“.</p><img alt="Náhled exportovaného přehledu" style="display:block;width:100%;height:auto;border:1px solid #e2e9e5;border-radius:8px;margin-bottom:14px"><div style="display:grid;grid-template-columns:1fr;gap:8px"><button type="button" data-image-share style="border:0;border-radius:10px;background:#173f35;color:#fff;padding:12px;font:inherit;font-weight:700">Sdílet / uložit PNG</button><button type="button" data-image-open style="border:0;border-radius:10px;background:#e5f3eb;color:#173f35;padding:12px;font:inherit;font-weight:700">Zobrazit obrázek samostatně</button><button type="button" data-image-close style="border:1px solid #d6e0da;border-radius:10px;background:#fff;color:#1d302b;padding:10px;font:inherit">Zavřít</button></div></div>';
+   dialog.querySelector('img').src=imageUrl;
+   document.body.appendChild(dialog);
+   const closeDialog=()=>{dialog.remove();URL.revokeObjectURL(imageUrl)};
+   dialog.querySelector('[data-image-close]').addEventListener('click',closeDialog);
+   dialog.addEventListener('click',event=>{if(event.target===dialog)closeDialog()});
+   dialog.querySelector('[data-image-open]').addEventListener('click',()=>{const opened=window.open(imageUrl,'_blank');if(!opened){const a=document.createElement('a');a.href=imageUrl;a.target='_blank';a.rel='noopener';a.textContent='Otevřít obrázek';dialog.querySelector('div').appendChild(a)}});
+   dialog.querySelector('[data-image-share]').addEventListener('click',async()=>{
+     const file=new File([blob],filename,{type:'image/png'});
+     try{
+       if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({files:[file],title:'Kamarádské účtování',text:'Přehled skupiny '+state.name});return}
+       const a=document.createElement('a');a.href=imageUrl;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+     }catch(err){if(err.name!=='AbortError')alert('Sdílení se nepodařilo. Zkus otevřít obrázek samostatně a uložit ho z náhledu.')}
+   });
    Object.assign(report.style,oldStyle);
  }catch(err){
    alert('Export obrázku se nepodařil. Zkontroluj připojení k internetu a zkus to znovu.');
