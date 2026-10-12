@@ -238,7 +238,7 @@ main.wrap{width:100%;overflow-x:clip}
 </head>
 <body>
 <header class="top"><div class="top-inner"><h1>Kamarádské účtování</h1><p>Jednoduše zjisti, kdo platil, kdo kolik dluží a jak to vyrovnat.</p></div></header>
-<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat společné výdaje, sledovat, kdo kolik zaplatil, a spočítat, kdo komu má peníze vrátit. Skupinu můžete používat sami nebo ji sdílet s ostatními přes odkaz.</p>
+<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat společné výdaje, sledovat, kdo kolik zaplatil, a spočítat, kdo komu má peníze vrátit. Skupinu můžete používat sami nebo ji sdílet s ostatními přes odkaz. Skupiny si můžete také zálohovat do souboru a později je obnovit importem zálohy, například při přechodu mezi prohlížečem a aplikací na ploše.</p>
 <div style="max-width:600px;margin:0 auto 24px;text-align:left;background:#f8faf8;border:1px solid var(--line);border-radius:14px;padding:16px 18px">
 <h3 style="font-size:16px;margin:0 0 8px">Jak to funguje?</h3>
 <ul style="margin:0;padding-left:20px;line-height:1.65">
@@ -271,7 +271,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer"><a href="https://reklubomir-creator.github.io/kamaradske-uctovani/" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.13-44</span></div>
+<div class="footer"><a href="https://reklubomir-creator.github.io/kamaradske-uctovani/" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.13-45</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -591,6 +591,7 @@ function showApp(){welcome.hidden=true;appNodes.forEach(el=>el.classList.remove(
 if(!hasSharedGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
 else welcome.hidden=true;
 document.getElementById('continueWelcome').addEventListener('click',showApp);
+document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());window.location.replace(url.toString())});
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
   const backup={format:'kamaradske-uctovani-backup',version:1,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}')};
