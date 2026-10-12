@@ -281,6 +281,7 @@ const parseDecimal=v=>Number(String(v??'').trim().replace(/\s/g,'').replace(',',
 const money=n=>new Intl.NumberFormat('cs-CZ',{style:'currency',currency:'CZK',maximumFractionDigits:2}).format(n);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const API_URL='https://script.google.com/macros/s/AKfycbxwZ3znGm_yQVV8YFCoSb_hPn8iz_GqYBt2N4OuBk6oSUd4wFTQgXPCXKVr3JQsZ8AFYg/exec';
+function shareLink(token){return API_URL+'?action=share&token='+encodeURIComponent(token)}
 const REMOTE_KEY='kamaradske-uctovani-remote-v1';
 let remoteTokens={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
@@ -459,7 +460,7 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
   if(remoteToken){
    const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
    history.replaceState({},'',url.href);
-   await navigator.clipboard?.writeText(url.href).catch(()=>{});
+   await navigator.clipboard?.writeText(shareLink(remoteToken)).catch(()=>{});
    document.getElementById('copyShareLink').hidden=false;
    setSyncStatus('Tato skupina už má sdílecí odkaz. Použij „Kopírovat odkaz“.');
    document.getElementById('groupSwitcher').open=false;
@@ -475,7 +476,7 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
   document.getElementById('copyShareLink').hidden=false;
   setSyncStatus('Skupina je online. Odkaz můžeš poslat ostatním členům.');
   document.getElementById('groupSwitcher').open=false;
-  const link= url.href;
+  const link=shareLink(remoteToken);
   try{await navigator.clipboard.writeText(link);alert('Sdílecí odkaz byl vytvořen a zkopírován. Každý, kdo ho má, může skupinu upravovat.')}
   catch{alert('Sdílecí odkaz byl vytvořen. Klikni na „Kopírovat odkaz“ a pošli ho ostatním.')}
  }catch(err){setSyncStatus('Sdílení se nepodařilo: '+err.message);alert('Skupinu se nepodařilo sdílet. '+err.message)}
@@ -483,8 +484,9 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
 });
 document.getElementById('copyShareLink').addEventListener('click',async()=>{
  const url=new URL(location.href);if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
- try{await navigator.clipboard.writeText(url.href);setSyncStatus('Sdílecí odkaz je zkopírovaný.')}
- catch{prompt('Zkopíruj tento odkaz:',url.href)}
+ const link=remoteToken?shareLink(remoteToken):url.href;
+ try{await navigator.clipboard.writeText(link);setSyncStatus('Sdílecí odkaz je zkopírovaný.')}
+ catch{prompt('Zkopíruj tento odkaz:',link)}
 });
 async function loadSharedGroup(){
  const token=new URLSearchParams(location.search).get('group');
