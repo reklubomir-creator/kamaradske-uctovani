@@ -243,7 +243,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-27</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-28</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -325,7 +325,18 @@ document.getElementById('peopleList').innerHTML=state.people.length?'<p class="m
 document.getElementById('payer').innerHTML=state.people.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');document.getElementById('participants').innerHTML=state.people.map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+p.id+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+p.id+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
 }
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',p.id!==btn.dataset.tab))}));
-function activateGroup(id){const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);persistDatabase();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()}
+function activateGroup(id){
+ const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;
+ activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);
+ remoteToken=remoteTokens[activeGroupId]||'';
+ const url=new URL(location.href);
+ if(remoteToken)url.searchParams.set('group',remoteToken);else url.searchParams.delete('group');
+ history.replaceState({},'',url.href);
+ persistDatabase();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();
+ document.getElementById('copyShareLink').hidden=!remoteToken;
+ setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
+ document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
+}
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 document.getElementById('renameGroup').addEventListener('click',()=>{const raw=prompt('Nový název skupiny:',state.name);if(raw===null)return;const name=raw.trim();if(!name){alert('Název skupiny nesmí být prázdný.');return}if(database.groups.some(g=>g.id!==activeGroupId&&g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}state.name=name;save();document.getElementById('groupSwitcher').open=false});
 document.getElementById('addGroup').addEventListener('click',()=>{const raw=prompt('Jak se bude nová skupina jmenovat?','Nová skupina');if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}if(database.groups.some(g=>g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}const group=emptyGroup(name);const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;database.groups.push(group);activateGroup(group.id)});
@@ -453,8 +464,11 @@ async function loadSharedGroup(){
   const response=await jsonp({action:'read',token});
   if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
   const remote=response.group, data=remote.data||{};
-  const group={id:activeGroupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[]};
-  const i=database.groups.findIndex(g=>g.id===activeGroupId);
+  // Rozpoznáme skupinu podle jejího tokenu, abychom při otevření jiného odkazu nepřepsali předchozí skupinu.
+  const mappedId=Object.keys(remoteTokens).find(id=>remoteTokens[id]===token&&database.groups.some(g=>g.id===id));
+  const groupId=mappedId||remote.id||crypto.randomUUID();
+  const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[]};
+  const i=database.groups.findIndex(g=>g.id===groupId);
   if(i>=0)database.groups[i]=group;else database.groups.push(group);
   state=group;database.activeGroupId=group.id;activeGroupId=group.id;
   rememberRemoteToken(activeGroupId,token);remoteToken=token;
