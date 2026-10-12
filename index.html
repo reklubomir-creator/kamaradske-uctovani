@@ -237,13 +237,13 @@ main.wrap{width:100%;overflow-x:clip}
 <main class="wrap">
 <details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
-<div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Každou poznámku přidáš samostatně a můžeš ji později smazat. Sdílí se s ostatními členy skupiny.</p></div>
+<div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Poznámky zůstávají uložené i po smazání výdajů a sdílí se s ostatními členy skupiny.</p></div>
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
 <div class="overview-actions">
   <div class="export-buttons"><button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button><button class="secondary" id="exportImage" type="button">▧ Exportovat přehled jako obrázek (PNG)</button></div>
   <p class="muted">PDF otevře tiskový dialog, kde vybereš „Uložit jako PDF“. Obrázek se stáhne jako PNG.</p>
-  <div class="reset-box"><div><strong>Vymazat výdaje skupiny</strong><p class="muted">Odstraní všechny výdaje a vyrovnání v této skupině. Název skupiny a jména členů zůstanou zachována.</p></div><button class="danger" id="clearExpenses" type="button">Vymazat data</button></div>
+  <div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div>
 </div>
 </section>
 <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
@@ -251,7 +251,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-39</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-40</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -436,6 +436,7 @@ function buildPdfReport(){
  '<h2>Bilance členů</h2><div class="report-panel">'+(state.people.length?state.people.map(p=>'<div class="report-row"><span>'+esc(p.name)+'</span><strong class="'+((bal[p.id]||0)>.005?'positive':(bal[p.id]||0)<-.005?'negative':'')+'">'+((bal[p.id]||0)>.005?'+':'')+money(bal[p.id]||0)+'</strong></div>').join(''):'<div class="report-empty">Skupina zatím nemá žádné členy.</div>')+'</div>'+
  '<h2>Doporučené vyrovnání</h2><div class="report-panel">'+(transfers.length?transfers.map(t=>'<div class="report-row"><span>'+esc(t.from)+' → '+esc(t.to)+'</span><strong>'+money(t.amount)+'</strong></div>').join(''):'<div class="report-empty">Zatím není co vyrovnávat.</div>')+'</div>'+
  '<div class="report-columns"><div><h2>Výdaje v čase</h2><div class="report-panel">'+chart(monthRows.map(([k,v])=>[k==='Bez data'?k:k.split('-').reverse().join('/'),v]),maxMonth)+'</div></div><div><h2>Kdo kolik zaplatil</h2><div class="report-panel">'+chart(paid.map(p=>[p.name,p.amount]),maxPaid)+'</div></div></div>'+
+ '<h2>Poznámky na příště</h2><div class="report-panel">'+(Array.isArray(state.notes)&&state.notes.length?state.notes.map(note=>'<div class="report-row"><span style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(note.text||'')+'</span></div>').join(''):'<div class="report-empty">Žádné poznámky.</div>')+'</div>'+
  '<h2>Přehled výdajů včetně podílů</h2><div class="report-panel">'+(state.expenses.length?[...state.expenses].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>{const p=state.people.find(x=>x.id===e.payer);const ids=(e.participants||[]).filter(id=>state.people.some(person=>person.id===id));const weights=ids.map(id=>{const raw=e.shares?Number(e.shares[id]):1;return {id,name:state.people.find(person=>person.id===id)?.name||'Neznámý člen',weight:Number.isFinite(raw)&&raw>0?raw:0}});const weightTotal=weights.reduce((sum,x)=>sum+x.weight,0);const sharesHtml=weights.length&&weightTotal>0?'<div style="margin-top:5px;font-size:9pt;color:#53645d">'+weights.map(x=>esc(x.name)+' ('+String(x.weight).replace('.',',')+' díl): '+money((Number(e.amount)||0)*x.weight/weightTotal)).join(' · ')+'</div>':'<div style="margin-top:5px;font-size:9pt;color:#697a74">Bez evidovaných podílů</div>';return '<div class="report-row"><span style="min-width:0"><strong>'+esc(e.description)+'</strong><small style="margin-left:8px;color:#697a74">· '+esc(p?.name||'Neznámý člen')+' · '+fmtDate(e.date)+'</small>'+sharesHtml+'</span><strong style="flex-shrink:0">'+money(e.amount)+'</strong></div>'}).join(''):'<div class="report-empty">Zatím nejsou zadané žádné výdaje.</div>')+'</div>'+
  '<div class="report-footer">Vygenerováno aplikací Kamarádské účtování · Částky jsou uvedeny v Kč.</div>';
 }
@@ -487,10 +488,17 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
 });
 
 document.getElementById('clearExpenses').addEventListener('click',()=>{
- if(!confirm('Opravdu chceš vymazat všechny výdaje a vyúčtování této skupiny? Tuto akci nelze vrátit. Název skupiny, jména členů a jejich nastavené podíly zůstanou zachovány.'))return;
+ if(!confirm('Opravdu chceš smazat všechny částky a vyúčtování? Poznámky, název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
  state.expenses=[];
  save();
- alert('Výdaje byly vymazány. Název skupiny, jména členů i jejich nastavené podíly zůstaly zachovány.');
+ alert('Částky byly smazány. Poznámky, název skupiny, členové i jejich podíly zůstaly zachovány.');
+});
+document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
+ if(!confirm('Opravdu chceš smazat všechny částky, vyúčtování i poznámky této skupiny? Tuto akci nelze vrátit. Název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
+ state.expenses=[];
+ state.notes=[];
+ save();
+ alert('Částky i poznámky byly smazány. Název skupiny, členové a jejich podíly zůstaly zachovány.');
 });
 
 document.getElementById('date').value=today();
