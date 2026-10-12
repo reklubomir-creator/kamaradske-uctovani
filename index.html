@@ -405,6 +405,10 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   render();updatePageTitle();document.getElementById('copyShareLink').hidden=!remoteToken;
   setSyncStatus(isShared?'Skupina byla smazána i z online databáze.':'Skupina byla smazána z tohoto prohlížeče.');
   document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click();
+  // Po smazání se vždy vrať na rozcestník; uložené skupiny zůstanou dostupné přes tlačítko Pokračovat.
+  welcome.hidden=false;
+  appNodes.forEach(el=>el.classList.add('app-content-hidden'));
+  document.getElementById('continueWelcome').hidden=database.groups.length===0;
   alert('Skupina „'+groupName+'“ byla smazána.');
  }catch(err){
   setSyncStatus('Skupinu se nepodařilo smazat: '+err.message);
