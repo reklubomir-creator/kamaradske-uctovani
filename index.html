@@ -112,6 +112,52 @@ button{touch-action:manipulation}
   #pdfReport .positive{color:#23734e!important}
   #pdfReport .negative{color:#b94747!important}
 }
+
+/* Finální úprava mobilního zobrazení: bez vodorovného posunu */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body{overflow-wrap:anywhere}
+main.wrap{width:100%;max-width:980px;min-width:0}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;min-width:0;overflow:hidden;gap:6px}
+.tab{min-width:0;white-space:normal;padding:10px 6px;text-align:center;overflow-wrap:anywhere}
+.grid{min-width:0;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid>*{min-width:0}
+.card{min-width:0;max-width:100%}
+.item{min-width:0;max-width:100%}
+.item>div:first-child{min-width:0;max-width:100%}
+.item>div:last-child{min-width:0;max-width:100%}
+.amount{overflow-wrap:anywhere}
+#settlements .item,#balances .item,#allExpenses .item,#peopleList .item{max-width:100%;min-width:0}
+input,select,button{max-width:100%}
+img,svg,canvas,iframe{max-width:100%}
+@media(max-width:760px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:540px){
+  .tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .tab{font-size:12px;line-height:1.2;padding:10px 3px;min-height:42px}
+  .wrap{padding-left:8px;padding-right:8px}
+  .top{padding-left:12px;padding-right:12px}
+  .card{padding:13px}
+  .stats{min-width:0}
+  .stat{min-width:0;overflow:hidden}
+  .stat strong{font-size:clamp(13px,3.6vw,16px);overflow-wrap:anywhere}
+  .item{flex-wrap:wrap}
+  .item>div:last-child{width:auto;max-width:100%;margin-left:auto}
+  .item .amount{white-space:normal}
+  .person-share{min-width:0;flex-wrap:wrap;justify-content:flex-end}
+  .participant-row{min-width:0;max-width:100%}
+  .reset-box{min-width:0}
+  .overview-actions,.report-panel{min-width:0;max-width:100%}
+}
+@media(max-width:360px){
+  .tab{font-size:11px;padding:9px 2px}
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .stat{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .stat small{font-size:12px}
+  .stat strong{font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -132,7 +178,7 @@ button{touch-action:manipulation}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>První prototyp:</strong> data se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Ostatní členové skupiny je ještě neuvidí. Sdílení přes odkaz a online synchronizaci doplníme po připojení databáze.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-17</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-18</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
