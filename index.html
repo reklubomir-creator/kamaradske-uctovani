@@ -88,7 +88,9 @@ button{touch-action:manipulation}
   @page{size:A4;margin:15mm}
   body{background:#fff!important;color:#1d302b!important;font-size:11pt}
   body>*{display:none!important}
-  body>#pdfReport{display:block!important}
+  body>main.wrap{display:block!important;max-width:none!important;margin:0!important;padding:0!important}
+  body>main.wrap>*{display:none!important}
+  body>main.wrap>#pdfReport{display:block!important}
   #pdfReport{display:block!important;font-family:Arial,Helvetica,sans-serif}
   #pdfReport .report-header{background:#173f35!important;color:#fff!important;padding:24px;border-radius:12px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   #pdfReport h1{font-size:25pt;margin:0 0 5px}
