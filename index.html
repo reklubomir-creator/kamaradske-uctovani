@@ -243,7 +243,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-30</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-31</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -263,7 +263,7 @@ if(database&&Array.isArray(database.groups)&&database.groups.length){
 state=database.groups.find(g=>g.id===activeGroupId);
 const persistDatabase=()=>{database.activeGroupId=activeGroupId;localStorage.setItem(KEY,JSON.stringify(database))};
 function slugifyName(value){return String(value||'skupina').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'skupina'}
-function updatePageTitle(){document.title=state&&state.name?state.name+' | Kamarádské účtování':'Kamarádské účtování'}
+function updatePageTitle(){document.title=state&&state.name?'Kamarádské účtování - '+state.name:'Kamarádské účtování'}
 function updateShareUrl(){
  const url=new URL(location.href);
  if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
