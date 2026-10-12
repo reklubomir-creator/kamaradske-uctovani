@@ -92,7 +92,7 @@ button{touch-action:manipulation}
 
 .overview-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px}
 .overview-actions>.primary{align-self:flex-start}
-.reset-box{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px;background:#fff;border:1px solid #f0d7d5;border-radius:14px}
+.delete-disclosure{margin-top:8px;border:1px solid #e2e8e4;border-radius:12px;background:#fff;overflow:hidden}.delete-disclosure>summary{cursor:pointer;padding:12px 14px;font-weight:600;color:var(--muted);list-style:none}.delete-disclosure>summary::-webkit-details-marker{display:none}.delete-disclosure>summary::after{content:"＋";float:right;color:var(--muted)}.delete-disclosure[open]>summary::after{content:"−"}.delete-disclosure-content{padding:0 12px 12px}.reset-box{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px;background:#fff;border:1px solid #f0d7d5;border-radius:14px}
 .reset-box p{margin:4px 0 0;max-width:600px}
 .reset-box .danger{flex-shrink:0}
 .pdf-report{display:none}
@@ -243,7 +243,7 @@ main.wrap{width:100%;overflow-x:clip}
 <div class="overview-actions">
   <div class="export-buttons"><button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button><button class="secondary" id="exportImage" type="button">▧ Exportovat přehled jako obrázek (PNG)</button></div>
   <p class="muted">PDF otevře tiskový dialog, kde vybereš „Uložit jako PDF“. Obrázek se stáhne jako PNG.</p>
-  <div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div>
+  <details class="delete-disclosure"><summary>🗑️ Mazání dat</summary><div class="delete-disclosure-content"><div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div></div></details>
 </div>
 </section>
 <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
