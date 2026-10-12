@@ -158,6 +158,41 @@ img,svg,canvas,iframe{max-width:100%}
   .stat strong{font-size:16px}
 }
 
+
+/* Oprava přetékání: omezit šířku všech vnořených prvků i jejich obsahu */
+html,body{max-width:100%;overflow-x:clip}
+body{position:relative}
+*,*::before,*::after{min-width:0}
+.top,.top-inner,main.wrap,.wrap,.panel,.grid,.card,.list,.item,.item>div{max-width:100%}
+.top-inner{padding-left:0;padding-right:0}
+main.wrap{width:100%;overflow-x:clip}
+.grid{width:100%}
+.participant-row{width:100%;grid-template-columns:auto minmax(0,1fr) auto minmax(52px,68px)}
+.participant-row>*{min-width:0}
+.participant-row span{overflow-wrap:anywhere}
+.person-share{max-width:100%;min-width:0}
+.person-share input{min-width:0}
+.export-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.export-buttons button{min-width:0}
+@media(max-width:540px){
+ .export-buttons{display:grid;grid-template-columns:minmax(0,1fr)}
+ .export-buttons button{width:100%;white-space:normal}
+ .participant-row{grid-template-columns:auto minmax(0,1fr) auto 58px;gap:5px}
+ .participant-row .share-input{width:58px;padding:7px 4px}
+ .person-share{flex-wrap:wrap}
+ .item>div:last-child{flex-wrap:wrap}
+}
+@media print{
+ #pdfReport h2{break-after:avoid-page;page-break-after:avoid}
+ #pdfReport .report-stats,#pdfReport .report-panel,#pdfReport .report-row,#pdfReport .report-chart-row{break-inside:avoid;page-break-inside:avoid}
+ #pdfReport .report-header{break-inside:avoid;page-break-inside:avoid}
+ #pdfReport .report-columns{break-inside:auto;page-break-inside:auto}
+ #pdfReport .report-columns>div{min-width:0}
+ #pdfReport .report-row{orphans:2;widows:2}
+ #pdfReport .report-panel{margin-bottom:8px}
+ #pdfReport .report-footer{break-inside:avoid;page-break-inside:avoid}
+}
+
 </style>
 </head>
 <body>
@@ -168,8 +203,8 @@ img,svg,canvas,iframe{max-width:100%}
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
 <div class="overview-actions">
-  <button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button>
-  <p class="muted">Vytvoří přehled skupiny s bilancí, doporučeným vyrovnáním a grafy. V dialogu tisku vyber „Uložit jako PDF“.</p>
+  <div class="export-buttons"><button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button><button class="secondary" id="exportImage" type="button">▧ Exportovat přehled jako obrázek (PNG)</button></div>
+  <p class="muted">PDF otevře tiskový dialog, kde vybereš „Uložit jako PDF“. Obrázek se stáhne jako PNG.</p>
   <div class="reset-box"><div><strong>Vymazat výdaje skupiny</strong><p class="muted">Odstraní všechny výdaje a vyrovnání v této skupině. Název skupiny a jména členů zůstanou zachována.</p></div><button class="danger" id="clearExpenses" type="button">Vymazat data</button></div>
 </div>
 </section>
@@ -178,7 +213,7 @@ img,svg,canvas,iframe{max-width:100%}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>První prototyp:</strong> data se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Ostatní členové skupiny je ještě neuvidí. Sdílení přes odkaz a online synchronizaci doplníme po připojení databáze.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-18</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-19</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -242,6 +277,36 @@ function buildPdfReport(){
  '<div class="report-footer">Vygenerováno aplikací Kamarádské účtování · Částky jsou uvedeny v Kč.</div>';
 }
 document.getElementById('exportPdf').addEventListener('click',()=>{buildPdfReport();window.print()});
+
+document.getElementById('exportImage').addEventListener('click',async()=>{
+ const button=document.getElementById('exportImage');
+ const report=document.getElementById('pdfReport');
+ const originalText=button.textContent;
+ button.disabled=true;button.textContent='Připravuji obrázek…';
+ try{
+   buildPdfReport();
+   if(!window.html2canvas){
+     await new Promise((resolve,reject)=>{
+       const script=document.createElement('script');
+       script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+       script.onload=resolve;script.onerror=()=>reject(new Error('Nepodařilo se načíst nástroj pro export obrázku.'));
+       document.head.appendChild(script);
+     });
+   }
+   const oldStyle={display:report.style.display,position:report.style.position,left:report.style.left,top:report.style.top,width:report.style.width,zIndex:report.style.zIndex};
+   report.style.display='block';report.style.position='absolute';report.style.left='0';report.style.top='0';report.style.width='900px';report.style.zIndex='-1';report.style.background='#fff';report.style.padding='20px';
+   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+   const canvas=await window.html2canvas(report,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,windowWidth:1000});
+   const link=document.createElement('a');
+   link.download='kamaradske-uctovani-'+state.name.trim().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.png';
+   link.href=canvas.toDataURL('image/png');link.click();
+   Object.assign(report.style,oldStyle);
+ }catch(err){
+   alert('Export obrázku se nepodařil. Zkontroluj připojení k internetu a zkus to znovu.');
+   report.style.display='';
+ }finally{button.disabled=false;button.textContent=originalText}
+});
+
 document.getElementById('clearExpenses').addEventListener('click',()=>{
  if(!confirm('Opravdu chceš vymazat všechny výdaje a vyúčtování této skupiny? Tuto akci nelze vrátit. Název skupiny a jména členů zůstanou zachována.'))return;
  state.expenses=[];
