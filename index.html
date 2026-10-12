@@ -291,7 +291,7 @@ if(database&&Array.isArray(database.groups)&&database.groups.length){
 state=database.groups.find(g=>g.id===activeGroupId);
 const persistDatabase=()=>{database.activeGroupId=activeGroupId;localStorage.setItem(KEY,JSON.stringify(database))};
 function slugifyName(value){return String(value||'skupina').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'skupina'}
-function updatePageTitle(){document.title=state&&state.name?'Kamarádské účtování - '+state.name:'Kamarádské účtování'}
+function updatePageTitle(){const welcomeScreen=document.getElementById('welcome');const onWelcome=welcomeScreen&&!welcomeScreen.hidden;document.title=!onWelcome&&state&&state.name?'Kamarádské účtování - '+state.name:'Kamarádské účtování'}
 function updateShareUrl(){
  const url=new URL(location.href);
  if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
