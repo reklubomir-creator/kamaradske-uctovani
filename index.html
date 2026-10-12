@@ -90,7 +90,7 @@ button{touch-action:manipulation}
   .item>div:last-child{width:100%;justify-content:space-between}
 }
 
-.overview-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.welcome-card{max-width:760px;margin:28px auto;padding:clamp(22px,5vw,42px);text-align:center}.welcome-mark{width:58px;height:58px;margin:0 auto 16px;display:grid;place-items:center;border-radius:18px;background:#e6f2eb;color:#23734e;font-size:30px;font-weight:800}.welcome-card h2{font-size:clamp(23px,4vw,32px);line-height:1.2;margin:0 auto 14px;max-width:580px}.welcome-intro{max-width:600px;margin:0 auto 24px;color:var(--muted);line-height:1.65}.welcome-actions{display:grid;gap:10px;max-width:440px;margin:0 auto}.welcome-actions button{width:100%;padding:13px 16px}.welcome-note{max-width:560px;margin:18px auto 0;font-size:13px;line-height:1.5}.app-content-hidden{display:none!important}.overview-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px}
 .overview-actions>.primary{align-self:flex-start}
 .delete-disclosure{margin-top:8px;border:1px solid #e2e8e4;border-radius:12px;background:#fff;overflow:hidden}.delete-disclosure>summary{cursor:pointer;padding:12px 14px;font-weight:600;color:var(--muted);list-style:none}.delete-disclosure>summary::-webkit-details-marker{display:none}.delete-disclosure>summary::after{content:"＋";float:right;color:var(--muted)}.delete-disclosure[open]>summary::after{content:"−"}.delete-disclosure-content{padding:0 12px 12px}.reset-box{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px;background:#fff;border:1px solid #f0d7d5;border-radius:14px}
 .reset-box p{margin:4px 0 0;max-width:600px}
@@ -234,7 +234,7 @@ main.wrap{width:100%;overflow-x:clip}
 </head>
 <body>
 <header class="top"><div class="top-inner"><h1>Kamarádské účtování</h1><p>Jednoduše zjisti, kdo platil, kdo kolik dluží a jak to vyrovnat.</p></div></header>
-<main class="wrap">
+<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat, kdo co zaplatil, kolik na koho připadá a jak mezi sebou výdaje vyrovnat. Stačí sdílet odkaz — funguje na iPhonu i Androidu.</p><div class="welcome-actions"><button class="primary" id="createOnlineWelcome" type="button">🌐 Založit sdílenou online skupinu</button><button class="secondary" id="createLocalWelcome" type="button">📱 Založit místní skupinu</button><button class="secondary" id="continueWelcome" type="button" hidden>Pokračovat do uložených skupin</button></div><p class="muted welcome-note">Online skupina se synchronizuje mezi zařízeními všech účastníků. Místní skupina zůstává uložená jen v tomto prohlížeči.</p></section>
 <details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
 <div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Poznámky zůstávají uložené i po smazání výdajů a sdílí se s ostatními členy skupiny.</p></div>
@@ -256,7 +256,7 @@ main.wrap{width:100%;overflow-x:clip}
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-let database, state, activeGroupId;
+let database, state, activeGroupId; const hasSharedGroupInUrl=!!new URLSearchParams(location.search).get('group');
 const emptyGroup=(name)=>({id:crypto.randomUUID(),name,people:[],expenses:[]});
 try{database=JSON.parse(localStorage.getItem(KEY))}catch{}
 if(database&&Array.isArray(database.groups)&&database.groups.length){
@@ -561,5 +561,22 @@ async function loadSharedGroup(){
  }catch(err){setSyncStatus('Sdílenou skupinu se nepodařilo načíst: '+err.message);alert('Odkaz na sdílenou skupinu nefunguje. '+err.message)}
 }
 loadSharedGroup();
+const welcome=document.getElementById('welcome');
+const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport')];
+function showApp(){welcome.hidden=true;appNodes.forEach(el=>el.classList.remove('app-content-hidden'))}
+if(!hasSharedGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
+else welcome.hidden=true;
+document.getElementById('continueWelcome').addEventListener('click',showApp);
+document.getElementById('createLocalWelcome').addEventListener('click',()=>{
+ const raw=prompt('Jak se bude skupina jmenovat?','Nová skupina');
+ if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}
+ const group=emptyGroup(name);database.groups.push(group);showApp();activateGroup(group.id);
+});
+document.getElementById('createOnlineWelcome').addEventListener('click',async()=>{
+ const raw=prompt('Jak se bude sdílená skupina jmenovat?','Kamarádi');
+ if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}
+ const group=emptyGroup(name);database.groups.push(group);showApp();activateGroup(group.id);
+ document.getElementById('shareGroup').click();
+});
 </script>
 </body></html>
