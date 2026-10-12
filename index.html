@@ -193,6 +193,30 @@ main.wrap{width:100%;overflow-x:clip}
  #pdfReport .report-footer{break-inside:avoid;page-break-inside:avoid}
 }
 
+
+/* Sdílený vzhled reportu pro export do PDF i PNG */
+#pdfReport{background:#fff;color:#1d302b;font-family:Arial,Helvetica,sans-serif;padding:20px}
+#pdfReport .report-header{background:#173f35;color:#fff;padding:24px;border-radius:12px}
+#pdfReport h1{font-size:30px;line-height:1.15;margin:0 0 6px}
+#pdfReport h2{font-size:19px;margin:22px 0 10px;border-bottom:1px solid #dce5df;padding-bottom:6px}
+#pdfReport .report-sub{opacity:.9;margin-top:4px}
+#pdfReport .report-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+#pdfReport .report-stat{border:1px solid #dce5df;border-radius:9px;padding:12px;min-width:0}
+#pdfReport .report-stat small{display:block;color:#697a74;font-size:12px}
+#pdfReport .report-stat strong{display:block;font-size:20px;margin-top:5px;overflow-wrap:anywhere}
+#pdfReport .report-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#pdfReport .report-panel{border:1px solid #dce5df;border-radius:9px;padding:12px;min-width:0}
+#pdfReport .report-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #edf1ee}
+#pdfReport .report-row:last-child{border-bottom:0}
+#pdfReport .report-row>span{min-width:0;overflow-wrap:anywhere}
+#pdfReport .report-row>strong{flex-shrink:0}
+#pdfReport .report-chart-row{display:grid;grid-template-columns:minmax(70px,100px) minmax(0,1fr) 78px;align-items:center;gap:8px;margin:10px 0;font-size:12px}
+#pdfReport .report-bar-bg{height:11px;background:#e8efeb;border-radius:20px;overflow:hidden}
+#pdfReport .report-bar{height:100%;background:#398363;border-radius:20px}
+#pdfReport .report-empty{color:#697a74;padding:10px 0}
+#pdfReport .report-footer{margin-top:22px;color:#697a74;font-size:12px;border-top:1px solid #dce5df;padding-top:8px}
+@media(max-width:600px){#pdfReport{padding:12px}#pdfReport .report-columns{grid-template-columns:minmax(0,1fr)}#pdfReport .report-stats{gap:6px}#pdfReport .report-stat{padding:8px}#pdfReport .report-stat strong{font-size:15px}#pdfReport .report-chart-row{grid-template-columns:76px minmax(0,1fr) 68px;gap:5px}}
+
 </style>
 </head>
 <body>
@@ -213,7 +237,7 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>První prototyp:</strong> data se zatím ukládají pouze v tomto prohlížeči na tomto zařízení. Ostatní členové skupiny je ještě neuvidí. Sdílení přes odkaz a online synchronizaci doplníme po připojení databáze.</div>
-<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-19</span></div>
+<div class="footer">Kamarádské účtování · prototyp<br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.12-20</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
@@ -282,6 +306,7 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
  const button=document.getElementById('exportImage');
  const report=document.getElementById('pdfReport');
  const originalText=button.textContent;
+ const oldStyle={display:report.style.display,position:report.style.position,left:report.style.left,top:report.style.top,width:report.style.width,zIndex:report.style.zIndex,background:report.style.background,padding:report.style.padding};
  button.disabled=true;button.textContent='Připravuji obrázek…';
  try{
    buildPdfReport();
@@ -293,7 +318,6 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
        document.head.appendChild(script);
      });
    }
-   const oldStyle={display:report.style.display,position:report.style.position,left:report.style.left,top:report.style.top,width:report.style.width,zIndex:report.style.zIndex};
    report.style.display='block';report.style.position='absolute';report.style.left='0';report.style.top='0';report.style.width='900px';report.style.zIndex='-1';report.style.background='#fff';report.style.padding='20px';
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
    const canvas=await window.html2canvas(report,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,windowWidth:1000});
@@ -303,8 +327,7 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
    Object.assign(report.style,oldStyle);
  }catch(err){
    alert('Export obrázku se nepodařil. Zkontroluj připojení k internetu a zkus to znovu.');
-   report.style.display='';
- }finally{button.disabled=false;button.textContent=originalText}
+ }finally{Object.assign(report.style,oldStyle);button.disabled=false;button.textContent=originalText}
 });
 
 document.getElementById('clearExpenses').addEventListener('click',()=>{
