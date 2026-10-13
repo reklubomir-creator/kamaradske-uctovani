@@ -104,17 +104,17 @@ if ($method === 'GET') {
     }
 }
 
-$input = $method === 'POST' ? readJsonBody() : [];
-$action = $method === 'GET' ? 'read' : (string)($input['action'] ?? '');
-
 if ($method === 'POST') {
     $contentType = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
     if ($contentType !== 'application/json') {
         respond(['ok' => false, 'error' => 'Content-Type must be application/json.'], 415);
     }
-    if (!in_array($action, ['create', 'save', 'delete'], true)) {
-        respond(['ok' => false, 'error' => 'Unknown action.'], 400);
-    }
+}
+$input = $method === 'POST' ? readJsonBody() : [];
+$action = $method === 'GET' ? 'read' : (string)($input['action'] ?? '');
+
+if ($method === 'POST' && !in_array($action, ['create', 'save', 'delete'], true)) {
+    respond(['ok' => false, 'error' => 'Unknown action.'], 400);
 }
 
 try {
