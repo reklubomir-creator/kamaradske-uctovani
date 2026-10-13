@@ -69,15 +69,15 @@ def main():
     status, _, _ = raw_request("OPTIONS", headers={"Origin": "https://attacker.example"})
     check(status == 403, "CORS preflight rejects unapproved origins")
 
-    status, _ = raw_request("POST", body=b'{"action":"create","name":"x"}',
+    status, _, _ = raw_request("POST", body=b'{"action":"create","name":"x"}',
                             headers={"Origin": allowed, "Content-Type": "text/plain"})
     check(status == 415, "POST rejects a non-JSON content type")
 
-    status, _ = raw_request("POST", body=b'{"action":',
+    status, _, _ = raw_request("POST", body=b'{"action":',
                             headers={"Origin": allowed, "Content-Type": "application/json"})
     check(status == 400, "POST rejects malformed JSON")
 
-    status, _ = raw_request("POST", body=b' ' * 524289,
+    status, _, _ = raw_request("POST", body=b' ' * 524289,
                             headers={"Origin": allowed, "Content-Type": "application/json"})
     check(status == 413, "POST rejects oversized request bodies")
 
