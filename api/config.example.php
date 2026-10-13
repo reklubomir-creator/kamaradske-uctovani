@@ -12,6 +12,6 @@ return [
     'db_password' => 'CHANGE_ME',
     'allowed_origins' => [
         'https://reklubomir-creator.github.io',
-        // Add the final custom domain origin here when it exists.
+        'https://vyuctovani.lubarek.cz',
     ],
 ];
