@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS groups (
   id CHAR(36) NOT NULL PRIMARY KEY,
-  access_token CHAR(73) NOT NULL UNIQUE,
+  access_token VARCHAR(100) NOT NULL UNIQUE,
   owner_key_hash CHAR(64) NOT NULL,
   name VARCHAR(190) NOT NULL,
   data_json LONGTEXT NOT NULL,
