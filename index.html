@@ -598,13 +598,31 @@ document.getElementById('exportDataWelcome').addEventListener('click',()=>{
 document.getElementById('importDataWelcome').addEventListener('click',()=>document.getElementById('importDataFile').click());
 document.getElementById('importDataFile').addEventListener('change',async ev=>{
  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+ const storageKeys=[KEY,REMOTE_KEY,OWNER_KEY];
+ const previous=Object.fromEntries(storageKeys.map(key=>[key,localStorage.getItem(key)]));
  try{
+  if(file.size>5*1024*1024)throw new Error('Soubor zálohy je příliš velký (limit je 5 MB).');
   const backup=JSON.parse(await file.text());
-  if(backup.format!=='kamaradske-uctovani-backup'||!backup.database||!Array.isArray(backup.database.groups))throw new Error('Soubor není platná záloha Kamarádského účtování.');
+  if(!backup||backup.format!=='kamaradske-uctovani-backup'||!backup.database||!Array.isArray(backup.database.groups))throw new Error('Soubor není platná záloha Kamarádského účtování.');
+  if(backup.version!==undefined&&![1,2].includes(backup.version))throw new Error('Tato verze zálohy není podporována.');
+  if(!backup.database.groups.every(g=>g&&typeof g==='object'&&!Array.isArray(g)&&typeof g.id==='string'&&g.id&&typeof g.name==='string'&&Array.isArray(g.people)&&Array.isArray(g.expenses)&&(g.notes===undefined||Array.isArray(g.notes)||typeof g.notes==='string')))throw new Error('Záloha obsahuje skupinu s neplatnou strukturou. Stávající data nebyla změněna.');
+  const ids=backup.database.groups.map(g=>g.id);
+  if(new Set(ids).size!==ids.length)throw new Error('Záloha obsahuje duplicitní identifikátory skupin.');
+  if(backup.database.groups.length>1000)throw new Error('Záloha obsahuje příliš mnoho skupin.');
+  const tokens=backup.remoteTokens??{};
+  const ownerKeys=backup.remoteOwnerKeys??{};
+  const validMapping=value=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(v=>typeof v==='string');
+  if(!validMapping(tokens)||!validMapping(ownerKeys))throw new Error('Záloha obsahuje neplatné mapování online skupin.');
+  if(Object.keys(tokens).some(id=>!ids.includes(id))||Object.keys(ownerKeys).some(id=>!ids.includes(id)))throw new Error('Záloha obsahuje online klíč k neexistující místní skupině.');
   if(!confirm('Načíst '+backup.database.groups.length+' skupin ze zálohy? Stávající skupiny v této webové aplikaci budou nahrazeny obsahem zálohy.'))return;
-  localStorage.setItem(KEY,JSON.stringify(backup.database));
-  localStorage.setItem(REMOTE_KEY,JSON.stringify(backup.remoteTokens||{}));
-   localStorage.setItem(OWNER_KEY,JSON.stringify(backup.remoteOwnerKeys||{}));
+  try{
+   localStorage.setItem(KEY,JSON.stringify(backup.database));
+   localStorage.setItem(REMOTE_KEY,JSON.stringify(tokens));
+   localStorage.setItem(OWNER_KEY,JSON.stringify(ownerKeys));
+  }catch(storageError){
+   for(const key of storageKeys){if(previous[key]===null)localStorage.removeItem(key);else localStorage.setItem(key,previous[key])}
+   throw new Error('Záloha se nevešla do úložiště prohlížeče. Původní data byla zachována.');
+  }
   alert('Skupiny byly načteny. Aplikace se nyní obnoví.');
   location.reload();
  }catch(err){alert('Zálohu se nepodařilo načíst: '+err.message)}
