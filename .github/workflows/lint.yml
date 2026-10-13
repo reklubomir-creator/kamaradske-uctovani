@@ -18,6 +18,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          extensions: mbstring, pdo_mysql
           tools: none
 
       - name: Check PHP syntax
@@ -40,3 +41,69 @@ jobs:
           Path("/tmp/kamaradske-uctovani-inline.js").write_text(scripts[-1], encoding="utf-8")
           PY
           node --check /tmp/kamaradske-uctovani-inline.js
+
+  api-integration:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: ci-root-password
+          MARIADB_DATABASE: ku_test
+          MARIADB_USER: ku_test_user
+          MARIADB_PASSWORD: ci-test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql
+          tools: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Create disposable test schema
+        env:
+          MYSQL_PWD: ci-test-password
+        run: mysql --protocol=TCP -h 127.0.0.1 -u ku_test_user ku_test < api/schema.sql
+
+      - name: Create temporary API config
+        run: |
+          cat > api/config.php <<'PHP'
+          <?php
+          return [
+              'db_host' => '127.0.0.1',
+              'db_name' => 'ku_test',
+              'db_user' => 'ku_test_user',
+              'db_password' => 'ci-test-password',
+              'allowed_origins' => [
+                  'https://vyuctovani.lubarek.cz',
+              ],
+          ];
+          PHP
+
+      - name: Start local PHP server
+        run: |
+          php -S 127.0.0.1:8080 -t . > /tmp/ku-api-server.log 2>&1 &
+          for attempt in $(seq 1 20); do
+            if curl --silent --fail "http://127.0.0.1:8080/api/index.php?action=read&token=not-a-real-token" > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Exercise API lifecycle and security checks
+        run: python3 api/tests/integration.py
