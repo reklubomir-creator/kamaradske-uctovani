@@ -604,9 +604,9 @@ document.getElementById('importDataFile').addEventListener('change',async ev=>{
  try{
   if(file.size>5*1024*1024)throw new Error('Soubor zálohy je příliš velký (limit je 5 MB).');
   const backup=JSON.parse(await file.text());
-  if(!backup||backup.format!=='kamaradske-uctovani-backup'||!backup.database||!Array.isArray(backup.database.groups))throw new Error('Soubor není platná záloha Kamarádského účtování.');
+  if(!backup||typeof backup!=='object'||Array.isArray(backup)||backup.format!=='kamaradske-uctovani-backup'||!backup.database||typeof backup.database!=='object'||Array.isArray(backup.database)||!Array.isArray(backup.database.groups))throw new Error('Soubor není platná záloha Kamarádského účtování.');
   if(backup.version!==undefined&&![1,2].includes(backup.version))throw new Error('Tato verze zálohy není podporována.');
-  if(!backup.database.groups.every(g=>g&&typeof g==='object'&&!Array.isArray(g)&&typeof g.id==='string'&&g.id&&typeof g.name==='string'&&Array.isArray(g.people)&&Array.isArray(g.expenses)&&(g.notes===undefined||Array.isArray(g.notes)||typeof g.notes==='string')))throw new Error('Záloha obsahuje skupinu s neplatnou strukturou. Stávající data nebyla změněna.');
+  if(!backup.database.groups.every(g=>g&&typeof g==='object'&&!Array.isArray(g)&&typeof g.id==='string'&&g.id.trim()&&typeof g.name==='string'&&g.name.trim()&&Array.isArray(g.people)&&g.people.length<=500&&g.people.every(p=>p&&typeof p==='object'&&!Array.isArray(p))&&Array.isArray(g.expenses)&&g.expenses.length<=5000&&g.expenses.every(e=>e&&typeof e==='object'&&!Array.isArray(e))&&(g.notes===undefined||Array.isArray(g.notes)||typeof g.notes==='string')&&(!Array.isArray(g.notes)||g.notes.length<=1000&&g.notes.every(n=>n&&typeof n==='object'&&!Array.isArray(n)))))throw new Error('Záloha obsahuje skupinu s neplatnou strukturou. Stávající data nebyla změněna.');
   const ids=backup.database.groups.map(g=>g.id);
   if(new Set(ids).size!==ids.length)throw new Error('Záloha obsahuje duplicitní identifikátory skupin.');
   if(backup.database.groups.length>1000)throw new Error('Záloha obsahuje příliš mnoho skupin.');
