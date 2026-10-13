@@ -574,6 +574,7 @@ document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
   const backup={format:'kamaradske-uctovani-backup',version:2,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}'),remoteOwnerKeys:JSON.parse(localStorage.getItem(OWNER_KEY)||'{}')};
   if(!backup.database||!Array.isArray(backup.database.groups))throw new Error('V tomto prohlížeči nejsou uložené žádné skupiny.');
+  if(Object.keys(backup.remoteOwnerKeys||{}).length&&!confirm('Tato záloha obsahuje také vlastnické klíče pro mazání online skupin. Uchovávej ji v bezpečí a neposílej ji ostatním. Pokračovat?'))return;
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kamaradske-uctovani-zaloha.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }catch(err){alert('Zálohu se nepodařilo vytvořit: '+err.message)}
