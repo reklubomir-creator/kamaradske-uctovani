@@ -1,27 +1,24 @@
-# Kamarádské účtování
+# Kamarádský rozpočet
 
-Jednoduchá webová aplikace pro evidenci společných výdajů a výpočet vyrovnání mezi přáteli.
+Webová aplikace pro přehledné společné hospodaření ve skupině přátel. Pomáhá evidovat výdaje, rozdělovat náklady mezi účastníky a vypočítat, kdo komu kolik dluží.
 
-## Aktuální prototyp
+## Co aplikace řeší
 
-- Přidávání a odebírání členů skupiny
-- Evidence výdajů, plátce, data a účastníků
-- Rovnoměrné rozdělení částky mezi vybrané účastníky
-- Přehled bilance členů a návrh převodů pro vyrovnání dluhů
-- Responzivní rozhraní pro mobil i počítač
-- Ukládání dat v místním úložišti prohlížeče
+- Správu členů skupiny a společných výdajů.
+- Záznam částky, plátce a lidí, mezi které se výdaj rozděluje.
+- Výpočet podílů a průběžných bilancí jednotlivých členů.
+- Přehled vyrovnání dluhů mezi členy.
+- Responzivní rozhraní pro použití na mobilu i počítači.
+- Práci s daty a jejich zálohování či obnovení podle aktuální implementace aplikace.
 
-## Spuštění
+## Pro koho
 
-Otevři soubor `index.html` v prohlížeči. Pro zveřejnění přes GitHub Pages otevři v repozitáři **Settings → Pages**, zvol nasazení z větve `main` a složky `/(root)`, potom ulož.
+Pro přátele, spolubydlící, rodinu nebo menší skupiny, které chtějí mít společné výdaje na jednom místě místo ručního počítání v chatu nebo tabulce.
 
-## Důležité omezení prototypu
+## Technologie a vývoj
 
-Data se nyní ukládají pouze v prohlížeči daného zařízení. Zatím nejsou sdílená mezi členy skupiny. Pro sdílené odkazy a synchronizaci je potřeba připojit online databázi a nastavit přístupová pravidla.
+Projekt je vyvíjen iterativně s důrazem na jednoduché ovládání, srozumitelný přehled financí a bezpečnou práci s daty. Aktuální způsob ukládání a sdílení dat je potřeba ověřit podle nasazené verze aplikace; nepředpokládejte automaticky, že všechny verze synchronizují data mezi zařízeními.
 
-## Další plánované kroky
+## Další informace
 
-1. Nasazení přes GitHub Pages.
-2. Online databáze a sdílení skupiny pomocí pozvánky.
-3. Ochrana skupin a oprávnění členů.
-4. Potvrzování splacených převodů a případně další způsoby dělení výdajů.
+Zdrojový kód, změny a vývoj aplikace jsou spravovány v tomto repozitáři.
