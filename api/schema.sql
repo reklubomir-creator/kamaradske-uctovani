@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS groups (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  access_token CHAR(73) NOT NULL UNIQUE,
+  owner_key_hash CHAR(64) NOT NULL,
+  name VARCHAR(190) NOT NULL,
+  data_json LONGTEXT NOT NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_groups_updated_at (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
