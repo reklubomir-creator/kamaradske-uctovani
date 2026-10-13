@@ -256,7 +256,7 @@ main.wrap{width:100%;overflow-x:clip}
 <p style="margin:0;color:var(--muted);font-size:14px;text-align:right"><strong>Autor: Lubomír Rek ml.</strong></p>
 </div>
 <div class="welcome-actions"><button class="primary" id="createOnlineWelcome" type="button">🌐 Založit sdílenou online skupinu</button><button class="secondary" id="createLocalWelcome" type="button">📱 Založit místní skupinu</button><button class="secondary" id="continueWelcome" type="button" hidden>Pokračovat do uložených skupin</button><button class="secondary" id="exportDataWelcome" type="button">⬇️ Exportovat zálohu skupin</button><button class="secondary" id="importDataWelcome" type="button">⬆️ Importovat zálohu skupin</button><input id="importDataFile" type="file" accept="application/json,.json" hidden></div><p class="muted welcome-note">Online skupina se synchronizuje mezi zařízeními všech účastníků. Místní skupina zůstává uložená jen v tomto prohlížeči.</p></section>
-<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
+<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p><button class="secondary" id="retrySync" type="button" hidden style="margin-top:8px">Zkusit synchronizaci znovu</button></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
 <div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Poznámky zůstávají uložené i po smazání výdajů a sdílí se s ostatními členy skupiny.</p></div>
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
@@ -324,6 +324,7 @@ async function apiRequest(action,payload={}){
  return result;
 }
 async function postRemote(token,data){return apiRequest('save',{token,data})}
+document.getElementById('retrySync').addEventListener('click',()=>syncRemote());
 async function syncRemote(){
  if(!remoteToken)return;
  remoteSavePending=true;
@@ -337,10 +338,10 @@ async function syncRemote(){
    const snapshot={name:state.name,people:JSON.parse(JSON.stringify(state.people)),expenses:JSON.parse(JSON.stringify(state.expenses)),notes:JSON.parse(JSON.stringify(Array.isArray(state.notes)?state.notes:[]))};
    await postRemote(token,snapshot);
   }
-  setSyncStatus('Skupina je synchronizovaná online.');
+  setSyncStatus('Skupina je synchronizovaná online.');const retryButton=document.getElementById('retrySync');if(retryButton)retryButton.hidden=true;
  }catch(err){
   remoteSavePending=false;
-  setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message);
+  setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message);const retryButton=document.getElementById('retrySync');if(retryButton)retryButton.hidden=false;
  }finally{
   remoteSaving=false;
   // A change may arrive after the loop condition but before the flag is cleared.
