@@ -27,7 +27,7 @@ This backend is being developed separately from the live GitHub Pages app. It do
 
 The API requires JSON for POST requests, rejects browser origins that are not explicitly listed in `allowed_origins`, and limits request and saved-data sizes. Requests without an Origin header are allowed for server-to-server tools and direct tests.
 
-The existing frontend currently uses JSONP and a Cloudflare share-link redirect. It must be updated separately to use this JSON API, store owner keys locally, and generate share links for the new deployment. This prototype is not yet connected to the live app and should not be treated as production-ready until PHP syntax checks, CORS checks, deployment, migration, and end-to-end tests pass.
+The test branch frontend now targets `https://vyuctovani.lubarek.cz/api/index.php`, uses the JSON API, stores owner keys in a separate versioned local-storage entry, and generates share links on the new subdomain. This is code preparation only: DNS/HTTPS, server configuration, deployment, migration, and end-to-end tests have not been completed. Do not switch the live app until those checks pass.
 
 ## Data migration
 
