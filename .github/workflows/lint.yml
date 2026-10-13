@@ -99,11 +99,16 @@ jobs:
         run: |
           php -S 127.0.0.1:8080 -t . > /tmp/ku-api-server.log 2>&1 &
           for attempt in $(seq 1 20); do
-            if curl --silent --fail "http://127.0.0.1:8080/api/index.php?action=read&token=not-a-real-token" > /dev/null; then
+            code=$(curl --silent --output /dev/null --write-out "%{http_code}" "http://127.0.0.1:8080/api/index.php?action=read&token=not-a-real-token" || true)
+            if [ "$code" = "404" ]; then
               break
             fi
             sleep 1
           done
+          if [ "${code:-}" != "404" ]; then
+            cat /tmp/ku-api-server.log
+            exit 1
+          fi
 
       - name: Exercise API lifecycle and security checks
         run: python3 api/tests/integration.py
