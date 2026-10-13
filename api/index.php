@@ -149,7 +149,9 @@ if ($action === 'read') {
 }
 
 if ($action === 'create') {
-    $name = trim((string)($input['name'] ?? 'Nová skupina'));
+    $rawName = $input['name'] ?? 'Nová skupina';
+    if (!is_string($rawName)) respond(['ok' => false, 'error' => 'Group name must be text.'], 400);
+    $name = trim($rawName);
     if ($name === '') $name = 'Nová skupina';
     if (mb_strlen($name) > 190) respond(['ok' => false, 'error' => 'Group name is too long.'], 400);
     $id = uuidV4();
@@ -171,9 +173,29 @@ if ($token === '' || strlen($token) > 200) {
 if ($action === 'save') {
     $data = $input['data'] ?? null;
     if (!is_array($data)) respond(['ok' => false, 'error' => 'Missing group data.'], 400);
-    $name = trim((string)($data['name'] ?? 'Sdílená skupina'));
+
+    // Keep the persisted structure compatible with the frontend and reject
+    // malformed payloads before they can replace a valid shared group.
+    $rawName = $data['name'] ?? 'Sdílená skupina';
+    if (!is_string($rawName)) respond(['ok' => false, 'error' => 'Group name must be text.'], 400);
+    $name = trim($rawName);
     if ($name === '') $name = 'Sdílená skupina';
     if (mb_strlen($name) > 190) respond(['ok' => false, 'error' => 'Group name is too long.'], 400);
+
+    foreach (['people' => 500, 'expenses' => 5000, 'notes' => 1000] as $field => $limit) {
+        if (!isset($data[$field]) || !is_array($data[$field])) {
+            respond(['ok' => false, 'error' => 'Field "' . $field . '" must be an array.'], 400);
+        }
+        if (count($data[$field]) > $limit) {
+            respond(['ok' => false, 'error' => 'Field "' . $field . '" contains too many items.'], 413);
+        }
+        foreach ($data[$field] as $item) {
+            if (!is_array($item)) {
+                respond(['ok' => false, 'error' => 'Each item in "' . $field . '" must be an object.'], 400);
+            }
+        }
+    }
+
     $data['name'] = $name;
     $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($json === false) respond(['ok' => false, 'error' => 'Could not encode group data.'], 400);
