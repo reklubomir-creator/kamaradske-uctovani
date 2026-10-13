@@ -589,7 +589,7 @@ loadSharedGroup();
 const welcome=document.getElementById('welcome');
 const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport')];
 function showApp(){welcome.hidden=true;appNodes.forEach(el=>el.classList.remove('app-content-hidden'))}
-if(!hasSharedGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
+if(!hasSharedGroupInUrl&&!reopenGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
 else welcome.hidden=true;
 document.getElementById('continueWelcome').addEventListener('click',showApp);
 document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());if(!url.searchParams.has('group')&&activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);window.location.replace(url.toString())});
