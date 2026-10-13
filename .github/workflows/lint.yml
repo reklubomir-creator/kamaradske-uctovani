@@ -1,0 +1,42 @@
+name: Validate app source
+
+on:
+  push:
+    branches: [test-cesky-hosting, vedos-backend-prototype]
+  pull_request:
+    branches: [test-cesky-hosting, vedos-backend-prototype]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: none
+
+      - name: Check PHP syntax
+        run: php -l api/index.php
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check inline JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.IGNORECASE)
+          if not scripts:
+              raise SystemExit("No inline script found in index.html")
+          Path("/tmp/kamaradske-uctovani-inline.js").write_text(scripts[-1], encoding="utf-8")
+          PY
+          node --check /tmp/kamaradske-uctovani-inline.js
