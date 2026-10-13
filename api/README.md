@@ -12,19 +12,22 @@ This backend is being developed separately from the live GitHub Pages app. It do
 
 1. Create a MariaDB database and user in the hosting control panel.
 2. Import `schema.sql` through phpMyAdmin.
-3. Copy `config.example.php` to `config.php` on the server and fill in the database credentials.
+3. Create `config.php` on the server and fill in the database credentials; never commit it.
 4. Add the exact browser origin(s) to `allowed_origins`. Do not use a wildcard.
 5. Keep `config.php` out of Git and protect it from public access. Prefer placing it outside the public web directory when the hosting layout allows it.
 6. Test on a separate temporary database before importing any real groups.
+7. Verify PHP syntax and run the API's negative/positive tests before connecting any frontend.
 
 ## API contract
 
-- `GET ?action=create&name=...` creates an empty group. The response includes a share token and an owner key. The owner key is shown only at creation and must be saved securely by the app.
+- `POST` JSON `{"action":"create","name":"Nová skupina"}` creates an empty group. The response includes a share token and an owner key. The owner key is shown only at creation and must be saved securely by the app.
 - `GET ?action=read&token=...` reads the group for anyone holding the share token.
 - `POST` JSON `{"action":"save","token":"…","data":{...}}` saves group data. Anyone holding the share token can edit, matching the current shared-group model.
 - `POST` JSON `{"action":"delete","token":"…","ownerKey":"…"}` deletes the group only when both the share token and separate owner key are valid.
 
-The existing frontend currently uses JSONP and a Cloudflare share-link redirect. It must be updated separately to use this JSON API, store owner keys locally, and generate share links for the new deployment. This prototype is not yet connected to the live app and should not be treated as production-ready until CORS, deployment, migration, and end-to-end tests pass.
+The API requires JSON for POST requests, rejects browser origins that are not explicitly listed in `allowed_origins`, and limits request and saved-data sizes. Requests without an Origin header are allowed for server-to-server tools and direct tests.
+
+The existing frontend currently uses JSONP and a Cloudflare share-link redirect. It must be updated separately to use this JSON API, store owner keys locally, and generate share links for the new deployment. This prototype is not yet connected to the live app and should not be treated as production-ready until PHP syntax checks, CORS checks, deployment, migration, and end-to-end tests pass.
 
 ## Data migration
 
