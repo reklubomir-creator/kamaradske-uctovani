@@ -34,7 +34,7 @@ jobs:
           from pathlib import Path
           import re
           html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.IGNORECASE)
+          scripts = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, re.IGNORECASE)
           if not scripts:
               raise SystemExit("No inline script found in index.html")
           Path("/tmp/kamaradske-uctovani-inline.js").write_text(scripts[-1], encoding="utf-8")
