@@ -271,16 +271,16 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer"><a href="https://reklubomir-creator.github.io/kamaradske-uctovani/" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.13-45</span></div>
+<div class="footer"><a href="https://reklubomir-creator.github.io/kamaradske-uctovani/" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.13-46</span></div>
 </main>
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-let database, state, activeGroupId; const hasSharedGroupInUrl=!!new URLSearchParams(location.search).get('group');
+let database, state, activeGroupId; const pageParams=new URLSearchParams(location.search); const hasSharedGroupInUrl=!!pageParams.get('group'); const reopenGroupInUrl=pageParams.get('_activeGroup');
 const emptyGroup=(name)=>({id:crypto.randomUUID(),name,people:[],expenses:[]});
 try{database=JSON.parse(localStorage.getItem(KEY))}catch{}
 if(database&&Array.isArray(database.groups)&&database.groups.length){
-  activeGroupId=database.activeGroupId||database.groups[0].id;
+  activeGroupId=(reopenGroupInUrl&&database.groups.some(g=>g.id===reopenGroupInUrl)?reopenGroupInUrl:database.activeGroupId)||database.groups[0].id;
   if(!database.groups.some(g=>g.id===activeGroupId))activeGroupId=database.groups[0].id;
 }else{
   const legacy=database&&Array.isArray(database.people)&&Array.isArray(database.expenses)?database:{people:[],expenses:[]};
@@ -591,7 +591,7 @@ function showApp(){welcome.hidden=true;appNodes.forEach(el=>el.classList.remove(
 if(!hasSharedGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
 else welcome.hidden=true;
 document.getElementById('continueWelcome').addEventListener('click',showApp);
-document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());window.location.replace(url.toString())});
+document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());if(!url.searchParams.has('group')&&activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);window.location.replace(url.toString())});
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
   const backup={format:'kamaradske-uctovani-backup',version:1,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}')};
