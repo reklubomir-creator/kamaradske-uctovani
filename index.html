@@ -311,7 +311,7 @@ let remoteTokens={},remoteOwnerKeys={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
 try{remoteOwnerKeys=JSON.parse(localStorage.getItem(OWNER_KEY))||{}}catch{remoteOwnerKeys={}}
 let remoteToken=remoteTokens[activeGroupId]||'';
-let remoteSaving=false;
+let remoteSaving=false,remoteSavePending=false;
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function rememberRemoteToken(groupId,token){remoteTokens[groupId]=token;localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));if(groupId===activeGroupId)remoteToken=token}
 function rememberOwnerKey(groupId,key){if(key)remoteOwnerKeys[groupId]=key;else delete remoteOwnerKeys[groupId];localStorage.setItem(OWNER_KEY,JSON.stringify(remoteOwnerKeys))}
@@ -325,11 +325,27 @@ async function apiRequest(action,payload={}){
 }
 async function postRemote(token,data){return apiRequest('save',{token,data})}
 async function syncRemote(){
- if(!remoteToken||remoteSaving)return;
- remoteSaving=true;setSyncStatus('Ukládám změny online…');
- try{await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses,notes:Array.isArray(state.notes)?state.notes:[]});setSyncStatus('Skupina je synchronizovaná online.')}
- catch(err){setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message)}
- finally{remoteSaving=false}
+ if(!remoteToken)return;
+ remoteSavePending=true;
+ if(remoteSaving)return;
+ remoteSaving=true;
+ setSyncStatus('Ukládám změny online…');
+ try{
+  while(remoteSavePending){
+   remoteSavePending=false;
+   const token=remoteToken;
+   const snapshot={name:state.name,people:JSON.parse(JSON.stringify(state.people)),expenses:JSON.parse(JSON.stringify(state.expenses)),notes:JSON.parse(JSON.stringify(Array.isArray(state.notes)?state.notes:[]))};
+   await postRemote(token,snapshot);
+  }
+  setSyncStatus('Skupina je synchronizovaná online.');
+ }catch(err){
+  remoteSavePending=false;
+  setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message);
+ }finally{
+  remoteSaving=false;
+  // A change may arrive after the loop condition but before the flag is cleared.
+  if(remoteSavePending)syncRemote();
+ }
 }
 const save=()=>{const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;persistDatabase();render();if(remoteToken)syncRemote()};
 function sortedPeople(){return [...state.people].sort((a,b)=>a.name.localeCompare(b.name,'cs',{sensitivity:'base'}))} function balances(){const b=Object.fromEntries(state.people.map(p=>[p.id,0]));for(const e of state.expenses){if(!(e.payer in b))continue;b[e.payer]+=Number(e.amount)||0;const ids=(e.participants||[]).filter(id=>id in b);if(!ids.length)continue;const weights=ids.map(id=>{const legacy=!e.shares;const n=legacy?1:Number(e.shares[id]);return Number.isFinite(n)&&n>0?n:0});const total=weights.reduce((s,n)=>s+n,0);if(total>0)ids.forEach((id,i)=>b[id]-=(Number(e.amount)||0)*weights[i]/total)}return b}
