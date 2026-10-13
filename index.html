@@ -303,52 +303,31 @@ function updateShareUrl(){
 const parseDecimal=v=>Number(String(v??'').trim().replace(/\s/g,'').replace(',','.'));
 const money=n=>new Intl.NumberFormat('cs-CZ',{style:'currency',currency:'CZK',maximumFractionDigits:2}).format(n);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const API_URL='https://script.google.com/macros/s/AKfycbxwZ3znGm_yQVV8YFCoSb_hPn8iz_GqYBt2N4OuBk6oSUd4wFTQgXPCXKVr3JQsZ8AFYg/exec';
-function shareLink(token){return 'https://kamaradske-uctovani-share.rek-lubomir.workers.dev/?group='+encodeURIComponent(token)}
+const API_URL='https://vyuctovani.lubarek.cz/api/index.php';
+function shareLink(token){return 'https://vyuctovani.lubarek.cz/?group='+encodeURIComponent(token)}
 const REMOTE_KEY='kamaradske-uctovani-remote-v1';
-let remoteTokens={};
+const OWNER_KEY='kamaradske-uctovani-owner-keys-v1';
+let remoteTokens={},remoteOwnerKeys={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
+try{remoteOwnerKeys=JSON.parse(localStorage.getItem(OWNER_KEY))||{}}catch{remoteOwnerKeys={}}
 let remoteToken=remoteTokens[activeGroupId]||'';
 let remoteSaving=false;
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function rememberRemoteToken(groupId,token){remoteTokens[groupId]=token;localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));if(groupId===activeGroupId)remoteToken=token}
-function jsonp(params){
- return new Promise((resolve,reject)=>{
-  const callback='__ku_cb_'+Math.random().toString(36).slice(2);
-  const script=document.createElement('script');
-  const timeout=setTimeout(()=>{cleanup();reject(new Error('Databáze neodpovídá.'))},15000);
-  function cleanup(){clearTimeout(timeout);delete window[callback];script.remove()}
-  window[callback]=data=>{cleanup();resolve(data)};
-  script.onerror=()=>{cleanup();reject(new Error('Databázi se nepodařilo načíst.'))};
-  const query=new URLSearchParams({...params,callback});
-  script.src=API_URL+'?'+query.toString();
-  document.head.appendChild(script);
- });
+function rememberOwnerKey(groupId,key){if(key)remoteOwnerKeys[groupId]=key;else delete remoteOwnerKeys[groupId];localStorage.setItem(OWNER_KEY,JSON.stringify(remoteOwnerKeys))}
+async function apiRequest(action,payload={}){
+ const options=action==='read'?{method:'GET'}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})};
+ const url=action==='read'?API_URL+'?action=read&token='+encodeURIComponent(payload.token||''):API_URL;
+ const response=await fetch(url,options);
+ let result;try{result=await response.json()}catch{throw new Error('Server nevrátil platnou odpověď. HTTP '+response.status)}
+ if(!response.ok||!result?.ok)throw new Error(result?.error||('Požadavek selhal (HTTP '+response.status+').'));
+ return result;
 }
-function postRemote(token,data){
- return new Promise((resolve,reject)=>{
-  const iframe=document.createElement('iframe');
-  iframe.name='ku_post_'+Math.random().toString(36).slice(2);
-  iframe.src='about:blank';iframe.style.display='none';
-  const form=document.createElement('form');
-  form.method='POST';form.action=API_URL;form.target=iframe.name;form.style.display='none';
-  const fields={token,data:JSON.stringify(data)};
-  Object.entries(fields).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)});
-  let finished=false,submitted=false;
-  const cleanup=()=>{form.remove();iframe.remove()};
-  const timer=setTimeout(()=>{if(finished)return;finished=true;cleanup();reject(new Error('Ukládání trvá příliš dlouho. Zkus to znovu.'))},15000);
-  iframe.onload=()=>{
-   if(!submitted){submitted=true;form.submit();return}
-   if(finished)return;finished=true;clearTimeout(timer);
-   setTimeout(()=>{cleanup();resolve({ok:true})},350);
-  };
-  document.body.append(iframe,form);
- });
-}
+async function postRemote(token,data){return apiRequest('save',{token,data})}
 async function syncRemote(){
  if(!remoteToken||remoteSaving)return;
  remoteSaving=true;setSyncStatus('Ukládám změny online…');
- try{await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses,notes:state.notes||''});setSyncStatus('Skupina je synchronizovaná online.')}
+ try{await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses,notes:Array.isArray(state.notes)?state.notes:[]});setSyncStatus('Skupina je synchronizovaná online.')}
  catch(err){setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message)}
  finally{remoteSaving=false}
 }
@@ -398,12 +377,13 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
  try{
   if(isShared){
    setSyncStatus('Mažu sdílenou skupinu online…');
-   const result=await jsonp({action:'delete',token:remoteToken});
-   if(!result||!result.ok)throw new Error(result?.error||'Online databáze skupinu nesmazala. Aktualizuj Apps Script o podporu mazání skupin a zkus to znovu.');
+   const ownerKey=remoteOwnerKeys[activeGroupId];
+   if(!ownerKey)throw new Error('V tomto prohlížeči chybí vlastnický klíč. Tuto online skupinu zde nelze bezpečně smazat.');
+   await apiRequest('delete',{token:remoteToken,ownerKey});
   }
   const removedId=activeGroupId;
   database.groups=database.groups.filter(g=>g.id!==removedId);
-  delete remoteTokens[removedId];
+  delete remoteTokens[removedId];delete remoteOwnerKeys[removedId];
   if(!database.groups.length){
    const replacement=emptyGroup('Moje skupina');
    database.groups.push(replacement);
@@ -415,6 +395,7 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   remoteToken=remoteTokens[activeGroupId]||'';
   persistDatabase();
   localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
+  localStorage.setItem(OWNER_KEY,JSON.stringify(remoteOwnerKeys));
   const url=new URL(location.href);url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
   document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();
   render();updatePageTitle();document.getElementById('copyShareLink').hidden=!remoteToken;
@@ -537,10 +518,10 @@ document.getElementById('shareGroup').addEventListener('click',async()=>{
    return;
   }
   setSyncStatus('Vytvářím online skupinu…');
-  const created=await jsonp({action:'create',name:state.name});
-  if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
-  remoteToken=created.group.token;rememberRemoteToken(activeGroupId,remoteToken);
-  await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses});
+  const created=await apiRequest('create',{name:state.name});
+   if(!created.group?.token||!created.group?.ownerKey)throw new Error('Server nevydal sdílecí token a vlastnický klíč.');
+   remoteToken=created.group.token;rememberRemoteToken(activeGroupId,remoteToken);rememberOwnerKey(activeGroupId,created.group.ownerKey);
+   await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses,notes:Array.isArray(state.notes)?state.notes:[]});
   const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
   history.replaceState({},'',url.href);
   document.getElementById('copyShareLink').hidden=false;
@@ -565,7 +546,7 @@ async function loadSharedGroup(){
  if(reopenGroupInUrl&&database.groups.some(g=>g.id===reopenGroupInUrl))return;
  setSyncStatus('Načítám sdílenou skupinu…');
  try{
-  const response=await jsonp({action:'read',token});
+  const response=await apiRequest('read',{token});
   if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
   const remote=response.group, data=remote.data||{};
   // Rozpoznáme skupinu podle jejího tokenu, abychom při otevření jiného odkazu nepřepsali předchozí skupinu.
@@ -591,7 +572,7 @@ document.getElementById('continueWelcome').addEventListener('click',showApp);
 document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());if(activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);const selectedToken=remoteTokens[activeGroupId]||'';if(selectedToken){url.searchParams.set('group',selectedToken);url.searchParams.set('nazev',slugifyName(state.name))}else{url.searchParams.delete('group');url.searchParams.delete('nazev')}window.location.replace(url.toString())});
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
-  const backup={format:'kamaradske-uctovani-backup',version:1,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}')};
+  const backup={format:'kamaradske-uctovani-backup',version:2,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}'),remoteOwnerKeys:JSON.parse(localStorage.getItem(OWNER_KEY)||'{}')};
   if(!backup.database||!Array.isArray(backup.database.groups))throw new Error('V tomto prohlížeči nejsou uložené žádné skupiny.');
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kamaradske-uctovani-zaloha.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -606,6 +587,7 @@ document.getElementById('importDataFile').addEventListener('change',async ev=>{
   if(!confirm('Načíst '+backup.database.groups.length+' skupin ze zálohy? Stávající skupiny v této webové aplikaci budou nahrazeny obsahem zálohy.'))return;
   localStorage.setItem(KEY,JSON.stringify(backup.database));
   localStorage.setItem(REMOTE_KEY,JSON.stringify(backup.remoteTokens||{}));
+   localStorage.setItem(OWNER_KEY,JSON.stringify(backup.remoteOwnerKeys||{}));
   alert('Skupiny byly načteny. Aplikace se nyní obnoví.');
   location.reload();
  }catch(err){alert('Zálohu se nepodařilo načíst: '+err.message)}
