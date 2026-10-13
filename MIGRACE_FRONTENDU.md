@@ -1,20 +1,19 @@
 # Frontend migration plan — Kamarádské účtování
 
-Status: planning only. This document does not change the live frontend, Google Apps Script, Cloudflare Worker, or database contents.
+Status: test-branch implementation in progress. Changes are limited to `test-cesky-hosting`; the live frontend, Google Apps Script, Cloudflare Worker, and production data have not been changed.
 
 Target branch: `test-cesky-hosting`.
 
 ## Current frontend locations
 
-The existing `index.html` currently contains:
-- `API_URL` pointing to Google Apps Script.
-- `shareLink(token)` pointing to the Cloudflare Worker redirect.
-- `jsonp(params)` for remote create/read/delete operations.
-- `postRemote(token, data)` using a hidden iframe/form for saves.
-- `syncRemote()` sending `name`, `people`, `expenses`, and `notes`.
-- `loadSharedGroup()` reading `?group=TOKEN` from the URL.
-- `REMOTE_KEY` storing the local group-ID → share-token mapping.
-- The delete handler currently calls the old GET/JSONP API and does not have an owner key.
+The test-branch `index.html` has been adapted to the PHP API:
+- `apiRequest()` uses GET for reads and JSON POST for writes.
+- `shareLink(token)` points to the proposed HTTPS subdomain.
+- `syncRemote()` serializes pending changes and exposes a retry button after a failed save.
+- `loadSharedGroup()` reads `?group=TOKEN` and maps the returned data into the current state shape.
+- `REMOTE_KEY` stores local group-ID → share-token mappings; a separate versioned key stores owner keys.
+- Online deletion requires the owner key and waits for server confirmation.
+- Backup import validates the envelope, group structure, duplicate IDs, mapping references, and collection limits before replacing local data. It attempts to restore the previous storage values if a storage write fails.
 
 ## Planned API adapter
 
@@ -75,3 +74,34 @@ The existing frontend saves an empty-string fallback for notes in one place. The
 - [ ] Existing local-only groups continue to work.
 - [ ] Backup/export and import retain group data and token mappings.
 - [ ] The original live Google Apps Script version still works unchanged until the planned cutover.
+
+
+## Automated checks currently in place
+
+The GitHub Actions workflow checks PHP syntax, inline JavaScript syntax, and runs API integration tests against a disposable MariaDB database. The integration suite covers CORS/preflight, invalid content types and JSON, request-size limits, create/read/save/delete, collection validation, and owner-key enforcement.
+
+Latest successful run for the current branch at the time of this update: https://github.com/reklubomir-creator/kamaradske-uctovani/actions/runs/38429977389. These checks do not replace testing the UI in a browser against a configured test server.
+
+## Manual browser acceptance checklist before any hosting deployment
+
+Run only with a disposable test group and test database. Do not use production groups or real owner keys.
+
+### Backup/import safety
+- [ ] Export a backup with multiple local groups and verify it contains the groups, active-group ID, token mappings, and (if present) owner-key mapping.
+- [ ] Cancel the sensitive-backup warning and verify no download is created when owner keys are included.
+- [ ] Import a valid version 1 backup and a valid version 2 backup; verify expected groups and mappings are restored.
+- [ ] Select a malformed JSON file, an unsupported version, duplicate group IDs, malformed group/member/expense/note entries, and an oversized file; each should be rejected without changing current storage.
+- [ ] Cancel the confirmation before replacing groups; verify current groups remain unchanged.
+- [ ] Simulate storage quota/write failure if feasible; verify the prior storage values remain intact. Note: browser storage rollback is best-effort if the browser also refuses the rollback writes.
+- [ ] Reload after a successful import and verify group selection, members, expenses, notes, and online-link mappings.
+
+### Online sync and recovery
+- [ ] With the test API available, edit a group name, member, expense, shares, and note; reload in the same browser and verify all changes persisted.
+- [ ] Open the share link in a second private browser/profile and verify it loads the same group without requiring the owner key.
+- [ ] Temporarily block the test API or go offline, make an edit, and verify the UI reports the failed online save without claiming success.
+- [ ] Restore connectivity and use “Zkusit synchronizaci znovu”; verify the latest local state is saved and the retry control disappears after success.
+- [ ] Make several quick edits while a save is in flight; verify the last edit is present after reload.
+- [ ] Attempt deletion without an owner key and with a wrong key; verify the server refuses deletion and the group remains.
+- [ ] Delete a disposable test group with the correct owner key and verify the server returns not found on the next read.
+
+Do not deploy to the public hostname or migrate/import live data until the hosting endpoint, HTTPS, and all manual checks above have been verified and there is an explicit rollback plan.
