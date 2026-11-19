@@ -1,0 +1,16 @@
+name = "kamaradske-uctovani-push"
+main = "worker.mjs"
+compatibility_date = "2025-05-05"
+workers_dev = true
+preview_urls = false
+
+[vars]
+APP_ORIGIN = "https://finance.lubarek.cz"
+
+[[durable_objects.bindings]]
+name = "PUSH_STORE"
+class_name = "PushStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PushStore"]

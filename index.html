@@ -559,7 +559,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.2.1</span>
+  <span>Verze 1.3.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -573,7 +573,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 </div>
 <dialog id="notificationsDialog" class="card" aria-labelledby="notificationsTitle">
   <h2 id="notificationsTitle">Upozornění</h2>
-  <p class="muted">Vyskakovací upozornění se zobrazují, když máš aplikaci otevřenou. U sdílené skupiny zahrnují i změny od ostatních.</p>
+  <p class="muted">Vyber, na které změny tě má aplikace upozornit. Systémová oznámení pro sdílené skupiny můžeš povolit zvlášť na tomto zařízení.</p>
   <label class="notification-option"><input type="checkbox" id="notificationsEnabled"> Zobrazovat upozornění</label>
   <fieldset id="notificationEvents">
     <legend>Upozornit na</legend>
@@ -582,6 +582,10 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <label class="notification-option"><input type="checkbox" data-notification-type="removed"> Smazané výdaje</label>
     <label class="notification-option"><input type="checkbox" data-notification-type="note"> Nové poznámky</label>
   </fieldset>
+  <div class="field">
+    <button class="secondary" id="pushToggle" type="button" disabled>Povolit systémová oznámení</button>
+    <small class="muted" id="pushStatus" role="status"></small>
+  </div>
   <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
 </dialog>
 <dialog id="installHelpDialog" class="card" aria-labelledby="installHelpTitle">
@@ -616,6 +620,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <button class="secondary" id="closeJoin" type="button">Zavřít</button>
   </form>
 </dialog>
+<script src="./push-client.js"></script>
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -667,7 +672,13 @@ try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTo
 let remoteToken=remoteTokens[activeGroupId]||'';
 const remoteWrites=new Map();
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
-function rememberRemoteToken(groupId,token){remoteTokens[groupId]=token;localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));if(groupId===activeGroupId)remoteToken=token}
+function rememberRemoteToken(groupId,token){
+ const newlyConnected=remoteTokens[groupId]!==token;
+ remoteTokens[groupId]=token;
+ localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
+ if(groupId===activeGroupId)remoteToken=token;
+ if(newlyConnected)void updatePushPreferences();
+}
 function jsonp(params){
  return new Promise((resolve,reject)=>{
   const callback='__ku_cb_'+Math.random().toString(36).slice(2);
@@ -718,6 +729,7 @@ async function writeRemoteQueue(token,pending){
    if(token===remoteToken)setSyncStatus('Ukládám změny online…');
    try{
     await postRemote(token,data);
+    void window.financePush?.publish(token).catch(()=>{});
     if(token===remoteToken&&!pending.next)setSyncStatus('Skupina je synchronizovaná online.');
    }catch(error){
     if(token===remoteToken&&!pending.next)setSyncStatus('Změny jsou uložené v prohlížeči. Online uložení se nepodařilo: '+error.message);
@@ -1113,6 +1125,75 @@ const notificationsDialog=document.getElementById('notificationsDialog');
 const notificationMaster=document.getElementById('notificationsEnabled');
 const notificationEvents=document.getElementById('notificationEvents');
 const notificationOptions=[...notificationEvents.querySelectorAll('[data-notification-type]')];
+
+const pushToggle=document.getElementById('pushToggle');
+const pushStatus=document.getElementById('pushStatus');
+let pushSetup;
+let pushSubscription;
+const selectedPushTypes=()=>notificationPreferences.enabled
+ ? notificationOptions.map(option=>option.dataset.notificationType).filter(type=>notificationPreferences[type]) : [];
+
+async function preparePushSettings(){
+ const client=window.financePush;
+ pushToggle.disabled=true;
+ pushStatus.textContent='';
+ if(!client?.supported()){
+  pushStatus.textContent='Na iPhonu otevři aplikaci z ikony na ploše, aby šla oznámení povolit.';
+  return;
+ }
+ try{
+  pushSubscription=await client.currentSubscription();
+  pushToggle.textContent=pushSubscription?'Vypnout systémová oznámení':'Povolit systémová oznámení';
+  if(pushSubscription){
+   pushToggle.disabled=false;
+   pushStatus.textContent='Toto zařízení je přihlášené k systémovým oznámením.';
+   return;
+  }
+  if(!Object.values(remoteTokens).some(Boolean)){
+   pushStatus.textContent='Nejdřív se připoj ke sdílené skupině.';
+   return;
+  }
+  if(Notification.permission==='denied'){
+   pushStatus.textContent='Povolení je potřeba změnit v nastavení oznámení zařízení nebo prohlížeče.';
+   return;
+  }
+  pushStatus.textContent='Ověřuji službu pro systémová oznámení…';
+  pushSetup=await client.configuration();
+  pushToggle.disabled=false;
+  pushStatus.textContent='Po povolení můžeš dostávat oznámení i při zavřené aplikaci.';
+ }catch{
+  pushStatus.textContent='Služba pro systémová oznámení zatím není dostupná.';
+ }
+}
+async function updatePushPreferences(){
+ const client=window.financePush;
+ if(!client)return;
+ try{
+  const subscription=await client.currentSubscription();
+  if(subscription)await client.apply(subscription,remoteTokens,selectedPushTypes());
+ }catch{
+  if(notificationsDialog.open)pushStatus.textContent='Volby se uložily v aplikaci. Systémová oznámení se nepodařilo aktualizovat.';
+ }
+}
+pushToggle.addEventListener('click',async()=>{
+ const client=window.financePush;
+ pushToggle.disabled=true;
+ try{
+  if(pushSubscription)await client.stop(pushSubscription,remoteTokens);
+  else if(pushSetup){
+   const subscription=await client.enroll(pushSetup);
+   try{await client.apply(subscription,remoteTokens,selectedPushTypes())}
+   catch(error){await client.stop(subscription,remoteTokens);throw error}
+  }
+  await preparePushSettings();
+ }catch(error){
+  pushStatus.textContent=Notification.permission==='denied'
+   ? 'Povolení uprav v nastavení oznámení zařízení nebo prohlížeče.'
+   : 'Nastavení systémových oznámení se nepodařilo uložit. Zkus to znovu.';
+  pushToggle.disabled=false;
+ }
+});
+
 const popup=document.getElementById('notificationPopup');
 const popupTitle=document.getElementById('notificationTitle');
 const popupText=document.getElementById('notificationText');
@@ -1135,12 +1216,14 @@ document.getElementById('openNotifications').addEventListener('click',()=>{
  renderNotificationPreferences();
  groupActions.open=false;
  notificationsDialog.showModal();
+ void preparePushSettings();
 });
 notificationsDialog.addEventListener('close',()=>groupActions.querySelector('summary').focus());
 notificationMaster.addEventListener('change',()=>{
  notificationPreferences.enabled=notificationMaster.checked;
  renderNotificationPreferences();
  saveNotificationPreferences();
+ void updatePushPreferences();
  if(!notificationPreferences.enabled)clearNotificationPopups();
  else pollGroupNotifications();
 });
@@ -1149,6 +1232,7 @@ notificationEvents.addEventListener('change',event=>{
  if(!key)return;
  notificationPreferences[key]=event.target.checked;
  saveNotificationPreferences();
+ void updatePushPreferences();
  pollGroupNotifications();
 });
 
@@ -1403,6 +1487,17 @@ document.getElementById('refreshSharedGroup').addEventListener('click',async eve
  try{await loadSharedGroup(remoteToken,{refresh:true})}
  catch(err){alert('Skupinu se nepodařilo obnovit. '+err.message)}
  finally{button.disabled=false}
+});
+if(pageParams.has('_push')&&reopenGroupInUrl===activeGroupId&&remoteToken&&!inviteToken){
+ const url=new URL(location.href);
+ url.searchParams.delete('_push');
+ history.replaceState({},'',url.href);
+ document.getElementById('refreshSharedGroup').click();
+}
+navigator.serviceWorker?.addEventListener('message',event=>{
+ if(event.data?.type!=='shared-expense-push'||event.data.groupId!==activeGroupId||!remoteToken||!welcome.hidden)return;
+ if(editedExpenseId||expenseFields.description.value||expenseFields.amount.value||document.getElementById('groupNoteInput').value)return;
+ document.getElementById('refreshSharedGroup').click();
 });
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
