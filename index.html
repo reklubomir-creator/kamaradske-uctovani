@@ -558,10 +558,10 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <button class="danger" id="deleteEditedExpense" type="button" hidden>Smazat výdaj</button>
 </div></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
 
-<section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
+<section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.5.1</span>
+  <span>Verze 1.5.2</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -577,7 +577,6 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <h2 id="notificationsTitle">Upozornění</h2>
   <p class="muted">Vyber, na které změny tě má aplikace upozornit. Systémová oznámení pro sdílené skupiny můžeš povolit zvlášť na tomto zařízení.</p>
   <label class="notification-option"><input type="checkbox" id="notificationsEnabled"> Zobrazovat upozornění</label>
-  <label class="field">Moje jméno v této skupině (volitelné)<select id="notificationAuthor"></select></label>
   <fieldset id="notificationEvents">
     <legend>Upozornit na</legend>
     <label class="notification-option"><input type="checkbox" data-notification-type="added"> Nové výdaje</label>
@@ -765,11 +764,15 @@ function render(){
 const b=balances();document.getElementById('balances').innerHTML=state.people.length?sortedPeople().map(p=>'<div class="item"><span>'+esc(p.name)+'</span><strong class="amount '+(b[p.id]>0.005?'positive':b[p.id]<-.005?'negative':'')+'">'+(b[p.id]>0.005?'+':'')+money(b[p.id]||0)+'</strong></div>').join(''):'<div class="empty">Nejdřív přidej členy skupiny.</div>';
 const s=settlements();document.getElementById('settlements').innerHTML=s.length?s.map(x=>'<div class="item"><div><div class="item-title">'+esc(x.from)+' <span class="muted">→</span> '+esc(x.to)+'</div><div class="muted">Doporučené vyrovnání</div></div><strong class="amount">'+money(x.amount)+'</strong></div>').join(''):'<div class="empty">'+(state.people.length>1?'Zatím není co vyrovnávat.':'Přidej alespoň dva členy a zadej výdaje.')+'</div>';
 const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(expenseMarkup).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
+ memberIdentity.innerHTML='<option value="">Neuvádět jméno</option>'+sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+ memberIdentity.value=state.people.some(p=>p.id===authorPreferences[activeGroupId])?authorPreferences[activeGroupId]:'';
 document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+esc(p.id)+'"><button class="danger" data-remove-person="'+esc(p.id)+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
 renderExpensePeople();
  document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
 const expenseForm=document.getElementById('expenseForm');
+const memberIdentity=document.getElementById('memberIdentity');
+memberIdentity.onchange=()=>rememberExpenseAuthor(memberIdentity.value);
 const authorPreferencesKey='kamaradske-uctovani-expense-authors';
 let authorPreferences=Object.create(null);
 try{Object.assign(authorPreferences,JSON.parse(localStorage.getItem(authorPreferencesKey))||{})}catch{}
@@ -1219,11 +1222,8 @@ function renderNotificationPreferences(){
  notificationEvents.disabled=!notificationPreferences.enabled;
  for(const option of notificationOptions)option.checked=notificationPreferences[option.dataset.notificationType];
 }
-const notificationAuthor=document.getElementById('notificationAuthor');
-notificationAuthor.onchange=()=>rememberExpenseAuthor(notificationAuthor.value);
+
 document.getElementById('openNotifications').addEventListener('click',()=>{
- notificationAuthor.innerHTML='<option value="">Neuvádět jméno</option>'+sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
- notificationAuthor.value=authorPreferences[activeGroupId]||'';
  renderNotificationPreferences();
  groupActions.open=false;
  notificationsDialog.showModal();
