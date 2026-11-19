@@ -394,6 +394,46 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 [data-theme="dark"] #overview .negative {color: var(--red);}
 [data-theme="dark"] dialog::backdrop {background: #070d0abb;}
 #pdfReport {color-scheme: light;}
+
+#openNotifications {margin-top: 10px;}
+.expense-date {min-width: 0;}
+#expenseForm input[type="date"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: 100%;
+}
+#expenseForm input[type="date"]::-webkit-date-and-time-value {min-width: 0; text-align: left;}
+#notificationsDialog {width: min(440px, calc(100% - 32px));}
+#notificationEvents {margin: 12px 0 16px; padding: 0 10px 8px; border: 1px solid var(--line); border-radius: 10px;}
+#notificationEvents:disabled {opacity: .62;}
+#notificationEvents legend {padding: 0 4px; color: var(--muted);}
+.notification-option {display: flex; align-items: center; gap: 9px; min-height: 42px; cursor: pointer;}
+.notification-option input {width: 18px; height: 18px; margin: 0; accent-color: var(--green);}
+.popup-notification {
+  position: fixed;
+  z-index: 25;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(390px, calc(100% - 32px));
+  padding: 12px 12px 12px 15px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 6px 25px #102b2060;
+}
+.popup-copy {flex: 1; min-width: 0; overflow-wrap: anywhere;}
+.popup-copy p {margin: 4px 0 0; font-size: .875rem; color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;}
+#notificationRefresh {margin-top: 8px; padding: 6px 10px; min-height: 36px;}
+#notificationDismiss {font-size: 22px; line-height: 1; min-width: 44px; min-height: 44px;}
 [hidden] {display: none !important;}
 </style>
 </head>
@@ -414,6 +454,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
             <option value="dark">Tmavý</option>
           </select>
         </div>
+        <button class="secondary full" id="openNotifications" type="button">Nastavení upozornění</button>
         <div id="groupMenuContent" class="app-content-hidden">
           <div class="row">
             <button class="primary" id="shareGroup" type="button">Sdílet skupinu</button>
@@ -483,7 +524,9 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="expenses" class="panel hidden"><div class="grid"><div class="card" id="expenseEditor"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2 id="expenseFormTitle">Nový výdaj</h2><div id="expenseNeedsMember" class="field hidden">
   <p class="muted">Pro uložení výdaje přidej alespoň jednoho člena skupiny.</p>
   <button id="expenseAddMember" class="secondary" type="button">Přidat člena</button>
-</div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
+</div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div>
+<div class="field expense-date"><label for="date">Datum</label><input id="date" type="date" required></div>
+<div class="field" id="expenseAuthorField"><label for="expenseAuthor">Kdo výdaj zapisuje?</label><select id="expenseAuthor" required></select></div><div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
 <div class="expense-form-actions">
   <button class="primary full" id="saveExpense" type="submit">Uložit výdaj</button>
   <button class="secondary" id="cancelExpenseEdit" type="button" hidden>Zrušit úpravy</button>
@@ -493,10 +536,31 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.1.0</span>
+  <span>Verze 1.2.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
+<div class="popup-notification" id="notificationPopup" hidden>
+  <div class="popup-copy" role="status" aria-live="polite">
+    <strong id="notificationTitle"></strong>
+    <p id="notificationText"></p>
+    <button class="secondary" id="notificationRefresh" type="button" hidden>Načíst změny</button>
+  </div>
+  <button class="secondary" id="notificationDismiss" type="button" aria-label="Zavřít upozornění">×</button>
+</div>
+<dialog id="notificationsDialog" class="card" aria-labelledby="notificationsTitle">
+  <h2 id="notificationsTitle">Upozornění</h2>
+  <p class="muted">Vyskakovací upozornění se zobrazují, když máš aplikaci otevřenou. U sdílené skupiny zahrnují i změny od ostatních.</p>
+  <label class="notification-option"><input type="checkbox" id="notificationsEnabled"> Zobrazovat upozornění</label>
+  <fieldset id="notificationEvents">
+    <legend>Upozornit na</legend>
+    <label class="notification-option"><input type="checkbox" data-notification-type="added"> Nové výdaje</label>
+    <label class="notification-option"><input type="checkbox" data-notification-type="edited"> Upravené výdaje</label>
+    <label class="notification-option"><input type="checkbox" data-notification-type="removed"> Smazané výdaje</label>
+    <label class="notification-option"><input type="checkbox" data-notification-type="note"> Nové poznámky</label>
+  </fieldset>
+  <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
+</dialog>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
   <h2 id="inviteTitle">Sdílet skupinu</h2>
   <p>Každý s odkazem nebo kódem může skupinu zobrazit a upravovat.</p>
@@ -656,6 +720,13 @@ renderExpensePeople();
  document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
 const expenseForm=document.getElementById('expenseForm');
+const authorPreferencesKey='kamaradske-uctovani-expense-authors';
+let authorPreferences=Object.create(null);
+try{Object.assign(authorPreferences,JSON.parse(localStorage.getItem(authorPreferencesKey))||{})}catch{}
+function rememberExpenseAuthor(id){
+ authorPreferences[activeGroupId]=id;
+ try{localStorage.setItem(authorPreferencesKey,JSON.stringify(authorPreferences))}catch{}
+}
 const expenseFields=expenseForm.elements;
 const expenseError=document.getElementById('expenseError');
 const expenseSuccess=document.getElementById('expenseSuccess');
@@ -663,11 +734,17 @@ let editedExpenseId=null;
 let expenseMessageTimer;
 function renderExpensePeople(preserveDraft=true){
  const payer=expenseFields.payer.value;
+ const preferredAuthor=(preserveDraft&&expenseFields.expenseAuthor.value)||authorPreferences[activeGroupId];
  const checks=new Map([...expenseForm.querySelectorAll('.person-check')].map(input=>{
   const weight=expenseFields.namedItem('share_'+input.value);
   return [input.value,{checked:input.checked,weight:editedExpenseId||weight.value!==weight.defaultValue?weight.value:undefined}];
  }));
- document.getElementById('payer').innerHTML=sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+esc(p.id)+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+esc(p.id)+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
+ const memberOptions=sortedPeople().map(person=>'<option value="'+esc(person.id)+'">'+esc(person.name)+'</option>').join('');
+ expenseFields.payer.innerHTML=memberOptions;
+ expenseFields.expenseAuthor.innerHTML='<option value="">Vyber své jméno</option>'+memberOptions;
+ if(state.people.some(person=>person.id===preferredAuthor))expenseFields.expenseAuthor.value=preferredAuthor;
+ else if(state.people.length===1)expenseFields.expenseAuthor.value=state.people[0].id;
+ document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+esc(p.id)+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+esc(p.id)+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
  document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
 
  if(!preserveDraft)return;
@@ -689,6 +766,8 @@ function setExpenseEditorMode(id=null){
  document.getElementById('saveExpense').textContent=id?'Uložit změny':'Uložit výdaj';
  document.getElementById('cancelExpenseEdit').hidden=!id;
  document.getElementById('deleteEditedExpense').hidden=!id;
+ document.getElementById('expenseAuthorField').hidden=Boolean(id);
+ expenseFields.expenseAuthor.disabled=Boolean(id);
  setExpenseError();
  clearTimeout(expenseMessageTimer);
  expenseSuccess.classList.remove('show');
@@ -722,6 +801,7 @@ document.getElementById('expenseAddMember').addEventListener('click',()=>{
  document.getElementById('personName').focus();
 });
 function activateGroup(id){
+ if(id!==activeGroupId)clearNotificationPopups();
  const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;
  activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);
  remoteToken=remoteTokens[activeGroupId]||'';
@@ -748,7 +828,7 @@ document.addEventListener('keydown',event=>{
  groupActions.querySelector('summary').focus();
 });
 
-document.getElementById('groupNoteForm').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('groupNoteInput');const value=input.value.trim();if(!value)return;if(!Array.isArray(state.notes))state.notes=[];state.notes.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});input.value='';save()});
+document.getElementById('groupNoteForm').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('groupNoteInput');const value=input.value.trim();if(!value)return;if(!Array.isArray(state.notes))state.notes=[];state.notes.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});input.value='';save();showNotification('note','Nová poznámka',value)});
 document.getElementById('groupNotesList').addEventListener('click',e=>{const button=e.target.closest('[data-delete-note]');if(!button)return;state.notes=(Array.isArray(state.notes)?state.notes:[]).filter(note=>note.id!==button.dataset.deleteNote);save()});
 document.getElementById('deleteGroup').addEventListener('click',async()=>{
  if(remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
@@ -786,6 +866,7 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   remoteToken=remoteTokens[activeGroupId]||'';
   persistDatabase();
   localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
+  clearNotificationPopups();
   const url=new URL(location.href);url.searchParams.delete('_activeGroup');url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
   resetExpenseForm();document.getElementById('personForm').reset();
   render();updatePageTitle();
@@ -829,9 +910,12 @@ document.getElementById('cancelExpenseEdit').addEventListener('click',()=>{
 });
 document.getElementById('deleteEditedExpense').addEventListener('click',()=>{
  if(!editedExpenseId||!confirm('Opravdu smazat tento výdaj?'))return;
- state.expenses=state.expenses.filter(expense=>expense.id!==editedExpenseId);
+ const expense=state.expenses.find(item=>item.id===editedExpenseId);
+ rememberLocalRemovals([editedExpenseId]);
+ state.expenses=state.expenses.filter(item=>item.id!==editedExpenseId);
  resetExpenseForm();
  save();
+ if(expense)announceExpense('removed',expense);
 });
 expenseForm.addEventListener('input',()=>setExpenseError());
 expenseForm.addEventListener('submit',event=>{
@@ -860,10 +944,20 @@ expenseForm.addEventListener('submit',event=>{
  const index=state.expenses.findIndex(expense=>expense.id===editedExpenseId);
  if(editedExpenseId&&index<0){setExpenseError('Tento výdaj už ve skupině není.');return}
  const fields={description,amount,payer,date,participants,shares};
- if(index>=0)state.expenses[index]={...state.expenses[index],...fields};
- else state.expenses.push({id:crypto.randomUUID(),...fields});
+ let savedExpense;
+ if(index>=0){
+  savedExpense={...state.expenses[index],...fields};
+  state.expenses[index]=savedExpense;
+ }else{
+  const author=state.people.find(person=>person.id===expenseFields.expenseAuthor.value);
+  if(!author){setExpenseError('Vyber, kdo výdaj zapisuje.');expenseFields.expenseAuthor.focus();return}
+  rememberExpenseAuthor(author.id);
+  savedExpense={id:crypto.randomUUID(),...fields,addedById:author.id,addedByName:author.name};
+  state.expenses.push(savedExpense);
+ }
  resetExpenseForm();
  save();
+ announceExpense(index>=0?'edited':'added',savedExpense);
  expenseSuccess.textContent=index>=0?'Změny výdaje byly uloženy.':'Výdaj byl uložen.';
  expenseSuccess.classList.add('show');
  expenseSuccess.scrollIntoView({block:'nearest'});
@@ -941,6 +1035,7 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
 
 document.getElementById('clearExpenses').addEventListener('click',()=>{
  if(!confirm('Opravdu chceš smazat všechny částky a vyúčtování? Poznámky, název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
+ rememberLocalRemovals(state.expenses.map(expense=>expense.id));
  state.expenses=[];
  resetExpenseForm();
  save();
@@ -948,6 +1043,7 @@ document.getElementById('clearExpenses').addEventListener('click',()=>{
 });
 document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
  if(!confirm('Opravdu chceš smazat všechny částky, vyúčtování i poznámky této skupiny? Tuto akci nelze vrátit. Název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
+ rememberLocalRemovals(state.expenses.map(expense=>expense.id));
  state.expenses=[];
  state.notes=[];
  resetExpenseForm();
@@ -969,10 +1065,163 @@ const joinStatus=document.getElementById('joinStatus');
 const joinSubmit=document.getElementById('joinSubmit');
 const closeJoin=document.getElementById('closeJoin');
 
+const notificationsKey='kamaradske-uctovani-notifications';
+const notificationPreferences={enabled:true,added:true,edited:false,removed:false,note:false};
+try{
+ const saved=JSON.parse(localStorage.getItem(notificationsKey))||{};
+ for(const key of Object.keys(notificationPreferences)){
+  if(typeof saved[key]==='boolean')notificationPreferences[key]=saved[key];
+ }
+}catch{}
+const notificationsDialog=document.getElementById('notificationsDialog');
+const notificationMaster=document.getElementById('notificationsEnabled');
+const notificationEvents=document.getElementById('notificationEvents');
+const notificationOptions=[...notificationEvents.querySelectorAll('[data-notification-type]')];
+const popup=document.getElementById('notificationPopup');
+const popupTitle=document.getElementById('notificationTitle');
+const popupText=document.getElementById('notificationText');
+const popupRefresh=document.getElementById('notificationRefresh');
+const popupQueue=[];
+let popupTimer;
+let notificationReadInFlight=false;
+const notificationSnapshots=new Map();
+const locallyRemovedExpenses=new Map();
+
+function saveNotificationPreferences(){
+ try{localStorage.setItem(notificationsKey,JSON.stringify(notificationPreferences))}catch{}
+}
+function renderNotificationPreferences(){
+ notificationMaster.checked=notificationPreferences.enabled;
+ notificationEvents.disabled=!notificationPreferences.enabled;
+ for(const option of notificationOptions)option.checked=notificationPreferences[option.dataset.notificationType];
+}
+document.getElementById('openNotifications').addEventListener('click',()=>{
+ renderNotificationPreferences();
+ groupActions.open=false;
+ notificationsDialog.showModal();
+});
+notificationsDialog.addEventListener('close',()=>groupActions.querySelector('summary').focus());
+notificationMaster.addEventListener('change',()=>{
+ notificationPreferences.enabled=notificationMaster.checked;
+ renderNotificationPreferences();
+ saveNotificationPreferences();
+ if(!notificationPreferences.enabled)clearNotificationPopups();
+ else pollGroupNotifications();
+});
+notificationEvents.addEventListener('change',event=>{
+ const key=event.target.dataset.notificationType;
+ if(!key)return;
+ notificationPreferences[key]=event.target.checked;
+ saveNotificationPreferences();
+ pollGroupNotifications();
+});
+
+function clearNotificationPopups(){
+ clearTimeout(popupTimer);
+ popupQueue.length=0;
+ popup.hidden=true;
+}
+function dismissNotification(){
+ clearTimeout(popupTimer);
+ popup.hidden=true;
+ showNextNotification();
+}
+function showNextNotification(){
+ if(!popup.hidden||!popupQueue.length)return;
+ const {title,detail,canRefresh}=popupQueue.shift();
+ popup.hidden=false;
+ popupTitle.textContent=title;
+ popupText.textContent=detail;
+ popupRefresh.hidden=!canRefresh;
+ popupTimer=setTimeout(dismissNotification,6500);
+}
+function showNotification(type,title,detail,canRefresh=false){
+ if(!notificationPreferences.enabled||!notificationPreferences[type])return;
+ if(popupQueue.length>=5)popupQueue.shift();
+ popupQueue.push({title,detail,canRefresh});
+ showNextNotification();
+}
+document.getElementById('notificationDismiss').addEventListener('click',dismissNotification);
+popupRefresh.addEventListener('click',()=>{
+ dismissNotification();
+ document.getElementById('refreshSharedGroup').click();
+});
+function rememberLocalRemovals(ids){
+ if(!remoteToken||!ids.length)return;
+ const removals=locallyRemovedExpenses.get(remoteToken)||new Set();
+ for(const id of ids)removals.add(id);
+ locallyRemovedExpenses.set(remoteToken,removals);
+}
+
+function announceExpense(type,expense,people=state.people,canRefresh=false){
+ const titles={added:'Nový výdaj',edited:'Upravený výdaj',removed:'Smazaný výdaj'};
+ const author=expense.addedByName||people.find(person=>person.id===expense.addedById)?.name;
+ const attribution=type==='added'?'Zapsal(a) '+(author||'neznámý člen')+' · ':'';
+ showNotification(type,titles[type],attribution+money(expense.amount)+' · '+expense.description,canRefresh);
+}
+function notificationSnapshot(group){
+ return {
+  expenses:new Map((Array.isArray(group.expenses)?group.expenses:[]).map(expense=>[expense.id,expense])),
+  notes:new Map((Array.isArray(group.notes)?group.notes:[]).map(note=>[note.id,note])),
+ };
+}
+function expenseFingerprint(expense){
+ if(!expense)return '';
+ const {description,amount,payer,date,participants,shares}=expense;
+ return JSON.stringify([description,Number(amount),payer,date,[...(participants||[])].sort(),Object.entries(shares||{}).sort()]);
+}
+function publishRemoteNotifications(token,group,localGroup,canRefresh=true){
+ const local=notificationSnapshot(localGroup);
+ const previous=notificationSnapshots.get(token)||local;
+ const incoming=notificationSnapshot(group);
+ notificationSnapshots.set(token,incoming);
+ for(const [id,expense] of incoming.expenses){
+  const before=previous.expenses.get(id);
+  if(!before){
+   if(!local.expenses.has(id))announceExpense('added',expense,group.people||[],canRefresh);
+   continue;
+  }
+  const fingerprint=expenseFingerprint(expense);
+  if(expenseFingerprint(before)!==fingerprint&&expenseFingerprint(local.expenses.get(id))!==fingerprint){
+   announceExpense('edited',expense,group.people||[],canRefresh);
+  }
+ }
+ const localRemovals=locallyRemovedExpenses.get(token);
+ for(const [id,expense] of previous.expenses){
+  if(!incoming.expenses.has(id)&&!localRemovals?.has(id))announceExpense('removed',expense,group.people||[],canRefresh);
+ }
+ for(const id of localRemovals||[]){
+  if(!incoming.expenses.has(id))localRemovals.delete(id);
+ }
+ for(const [id,note] of incoming.notes){
+  if(!previous.notes.has(id)&&!local.notes.has(id))showNotification('note','Nová poznámka',note.text,canRefresh);
+ }
+}
+async function pollGroupNotifications(){
+ const token=remoteToken;
+ const refreshButton=document.getElementById('refreshSharedGroup');
+ if(!notificationPreferences.enabled||!notificationOptions.some(option=>notificationPreferences[option.dataset.notificationType])||
+    !token||!welcome.hidden||document.hidden||remoteWrites.has(token)||refreshButton.disabled||notificationReadInFlight)return;
+ notificationReadInFlight=true;
+ try{
+  const response=await jsonp({action:'read',token});
+  if(response?.ok&&response.group?.data&&remoteToken===token&&welcome.hidden&&!document.hidden&&
+     !remoteWrites.has(token)&&!refreshButton.disabled){
+   publishRemoteNotifications(token,response.group.data,state);
+  }
+ }catch{
+  // A missed check is retried while the page is visible.
+ }finally{notificationReadInFlight=false}
+}
+setInterval(pollGroupNotifications,25000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollGroupNotifications()});
+
+
 let returningHome=false;
 document.getElementById('backHome').addEventListener('click',event=>{
  event.preventDefault();
  returningHome=true;
+ clearNotificationPopups();
  const url=new URL(location.href);
  for(const key of ['_activeGroup','group','nazev','_refresh'])url.searchParams.delete(key);
  if(new URLSearchParams(url.hash.slice(1)).has('group'))url.hash='';
@@ -1060,6 +1309,8 @@ async function loadSharedGroup(token,{refresh=false}={}){
  const existing=database.groups.find(group=>remoteTokens[group.id]===token);
  const groupId=existing?.id||crypto.randomUUID();
  const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[])};
+ if(refresh&&existing)publishRemoteNotifications(token,data,existing,false);
+ else notificationSnapshots.set(token,notificationSnapshot(group));
  if(existing)Object.assign(existing,group);else {
   database.groups=database.groups.filter(item=>!item.placeholder);
   database.groups.push(group);
