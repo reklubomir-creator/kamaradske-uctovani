@@ -4,6 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#173f35">
 <link rel="icon" type="image/svg+xml" href="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
 <link rel="apple-touch-icon" href="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
@@ -239,7 +240,7 @@ main.wrap{width:100%;overflow-x:clip}
 </head>
 <body>
 <header class="top"><div class="top-inner"><h1>Kamarádské účtování</h1><p>Jednoduše zjisti, kdo platil, kdo kolik dluží a jak to vyrovnat.</p></div></header>
-<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat společné výdaje, sledovat, kdo kolik zaplatil, a spočítat, kdo komu má peníze vrátit. Skupinu můžete používat sami nebo ji sdílet s ostatními přes odkaz. Skupiny si můžete také zálohovat do souboru a později je obnovit importem zálohy, například při přechodu mezi prohlížečem a aplikací na ploše.</p>
+<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat společné výdaje, sledovat, kdo kolik zaplatil, a spočítat, kdo komu má peníze vrátit. Skupinu můžete používat sami nebo ji sdílet s ostatními odkazem nebo kódem. Skupiny si můžete také zálohovat do souboru a později je obnovit importem zálohy, například při přechodu mezi prohlížečem a aplikací na ploše.</p>
 <div style="max-width:600px;margin:0 auto 24px;text-align:left;background:#f8faf8;border:1px solid var(--line);border-radius:14px;padding:16px 18px">
 <h3 style="font-size:16px;margin:0 0 8px">Jak to funguje?</h3>
 <ul style="margin:0;padding-left:20px;line-height:1.65">
@@ -255,8 +256,8 @@ main.wrap{width:100%;overflow-x:clip}
 <p style="margin:0 0 10px">Podobných aplikací už existuje spousta. Chtěl jsem si ale vytvořit vlastní řešení, které bude jednoduché, přehledné a bude fungovat přesně tak, jak potřebuji já a moji kamarádi. Bez zbytečných složitostí, s možností přizpůsobit si dělení výdajů a podílů podle konkrétní situace.</p>
 <p style="margin:0;color:var(--muted);font-size:14px;text-align:right"><strong>Autor: Lubomír Rek ml.</strong></p>
 </div>
-<div class="welcome-actions"><button class="primary" id="createOnlineWelcome" type="button">🌐 Založit sdílenou online skupinu</button><button class="secondary" id="createLocalWelcome" type="button">📱 Založit místní skupinu</button><button class="secondary" id="continueWelcome" type="button" hidden>Pokračovat do uložených skupin</button><button class="secondary" id="exportDataWelcome" type="button">⬇️ Exportovat zálohu skupin</button><button class="secondary" id="importDataWelcome" type="button">⬆️ Importovat zálohu skupin</button><input id="importDataFile" type="file" accept="application/json,.json" hidden></div><p class="muted welcome-note">Online skupina se synchronizuje mezi zařízeními všech účastníků. Místní skupina zůstává uložená jen v tomto prohlížeči.</p></section>
-<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu odkazem</button><button class="secondary" id="copyShareLink" type="button" hidden>Kopírovat odkaz</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním pomocí odkazu.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
+<div class="welcome-actions"><button class="primary" id="createOnlineWelcome" type="button">🌐 Založit sdílenou online skupinu</button><button class="secondary" type="button" data-join-group>Zadat kód skupiny</button><button class="secondary" id="createLocalWelcome" type="button">📱 Založit místní skupinu</button><button class="secondary" id="continueWelcome" type="button" hidden>Pokračovat do uložených skupin</button><button class="secondary" id="exportDataWelcome" type="button">⬇️ Exportovat zálohu skupin</button><button class="secondary" id="importDataWelcome" type="button">⬆️ Importovat zálohu skupin</button><input id="importDataFile" type="file" accept="application/json,.json" hidden></div><p class="muted welcome-note">Online skupina se synchronizuje mezi zařízeními všech účastníků. Místní skupina zůstává uložená jen v tomto prohlížeči.</p></section>
+<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu</button><button class="secondary" type="button" data-join-group>Zadat kód skupiny</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním odkazem nebo kódem.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
 <div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Poznámky zůstávají uložené i po smazání výdajů a sdílí se s ostatními členy skupiny.</p></div>
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
@@ -272,12 +273,33 @@ main.wrap{width:100%;overflow-x:clip}
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer"><a href="https://reklubomir-creator.github.io/kamaradske-uctovani/" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.10.13-53</span></div>
+<div class="footer"><a href="./" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.11.19-54</span></div>
 </main>
+<dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
+  <h2 id="inviteTitle">Sdílet skupinu</h2>
+  <p>Každý s odkazem nebo kódem může skupinu zobrazit a upravovat.</p>
+  <div class="field"><label for="inviteLink">Odkaz</label><input id="inviteLink" readonly></div>
+  <button class="secondary full" id="copyInviteLink" type="button">Kopírovat odkaz</button>
+  <div class="field" style="margin-top:12px"><label for="inviteCode">Kód skupiny</label><input id="inviteCode" readonly></div>
+  <button class="secondary full" id="copyInviteCode" type="button">Kopírovat kód</button>
+  <p class="muted" id="copyInviteStatus" role="status"></p>
+  <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
+</dialog>
+<dialog id="joinDialog" class="card" aria-labelledby="joinTitle" style="width:min(480px,calc(100% - 32px))">
+  <h2 id="joinTitle">Připojit se ke skupině</h2>
+  <form id="joinForm">
+    <div class="field"><label for="joinCode">Kód skupiny nebo pozvánkový odkaz</label>
+      <input id="joinCode" required autofocus autocapitalize="none" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="muted" id="joinStatus" role="status"></p>
+    <button class="primary" id="joinSubmit" type="submit">Připojit se</button>
+    <button class="secondary" id="closeJoin" type="button">Zavřít</button>
+  </form>
+</dialog>
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-let database, state, activeGroupId; const pageParams=new URLSearchParams(location.search); const hasSharedGroupInUrl=!!pageParams.get('group'); const reopenGroupInUrl=pageParams.get('_activeGroup');
+let database, state, activeGroupId; const pageParams=new URLSearchParams(location.search); const inviteToken=new URLSearchParams(location.hash.slice(1)).get('group')||pageParams.get('group'); const reopenGroupInUrl=pageParams.get('_activeGroup');
 const emptyGroup=(name)=>({id:crypto.randomUUID(),name,people:[],expenses:[]});
 try{database=JSON.parse(localStorage.getItem(KEY))}catch{}
 if(database&&Array.isArray(database.groups)&&database.groups.length){
@@ -296,15 +318,29 @@ function updatePageTitle(){const welcomeScreen=document.getElementById('welcome'
 function updateShareUrl(){
  const url=new URL(location.href);
  if(activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);
- if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
- else{url.searchParams.delete('group');url.searchParams.delete('nazev')}
+ url.searchParams.delete('group');
+ if(new URLSearchParams(url.hash.slice(1)).has('group'))url.hash='';
+ if(remoteToken)url.searchParams.set('nazev',slugifyName(state.name));else url.searchParams.delete('nazev');
+ url.searchParams.delete('_refresh');
  history.replaceState({},'',url.href);
 }
 const parseDecimal=v=>Number(String(v??'').trim().replace(/\s/g,'').replace(',','.'));
 const money=n=>new Intl.NumberFormat('cs-CZ',{style:'currency',currency:'CZK',maximumFractionDigits:2}).format(n);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const API_URL='https://script.google.com/macros/s/AKfycbxwZ3znGm_yQVV8YFCoSb_hPn8iz_GqYBt2N4OuBk6oSUd4wFTQgXPCXKVr3JQsZ8AFYg/exec';
-function shareLink(token){return 'https://kamaradske-uctovani-share.rek-lubomir.workers.dev/?group='+encodeURIComponent(token)}
+function shareLink(token){
+ const url=new URL('./',location.href);
+ url.hash=new URLSearchParams({group:token}).toString();
+ return url.href;
+}
+function parseInvite(value){
+ const input=value.trim();
+ if(!input.includes('://'))return input;
+ try{
+  const url=new URL(input);
+  return new URLSearchParams(url.hash.slice(1)).get('group')||url.searchParams.get('group')||'';
+ }catch{return ''}
+}
 const REMOTE_KEY='kamaradske-uctovani-remote-v1';
 let remoteTokens={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
@@ -374,13 +410,8 @@ function activateGroup(id){
  const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;
  activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);
  remoteToken=remoteTokens[activeGroupId]||'';
- const url=new URL(location.href);
- if(remoteToken)url.searchParams.set('group',remoteToken);else url.searchParams.delete('group');
- if(remoteToken)url.searchParams.set('nazev',slugifyName(state.name));else url.searchParams.delete('nazev');
- if(activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);
- history.replaceState({},'',url.href);
+ updateShareUrl();
  persistDatabase();updatePageTitle();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();
- document.getElementById('copyShareLink').hidden=!remoteToken;
  setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
 }
@@ -417,7 +448,7 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
   const url=new URL(location.href);url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
   document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();
-  render();updatePageTitle();document.getElementById('copyShareLink').hidden=!remoteToken;
+  render();updatePageTitle();
   setSyncStatus(isShared?'Skupina byla smazána i z online databáze.':'Skupina byla smazána z tohoto prohlížeče.');
   document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click();
   // Po smazání se vždy vrať na rozcestník; uložené skupiny zůstanou dostupné přes tlačítko Pokračovat.
@@ -524,71 +555,131 @@ document.getElementById('date').value=today();
 // Výchozí podíl se použije pro nové platby; historické platby bez uložených podílů zůstávají rozdělené rovným dílem.
 state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();updatePageTitle();
 
-document.getElementById('shareGroup').addEventListener('click',async()=>{
- const button=document.getElementById('shareGroup');button.disabled=true;
- try{
-  if(remoteToken){
-   const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
-   history.replaceState({},'',url.href);
-   await navigator.clipboard?.writeText(shareLink(remoteToken)).catch(()=>{});
-   document.getElementById('copyShareLink').hidden=false;
-   setSyncStatus('Tato skupina už má sdílecí odkaz. Použij „Kopírovat odkaz“.');
-   document.getElementById('groupSwitcher').open=false;
-   return;
-  }
-  setSyncStatus('Vytvářím online skupinu…');
-  const created=await jsonp({action:'create',name:state.name});
-  if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
-  remoteToken=created.group.token;rememberRemoteToken(activeGroupId,remoteToken);
-  await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses});
-  const url=new URL(location.href);url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name));
-  history.replaceState({},'',url.href);
-  document.getElementById('copyShareLink').hidden=false;
-  setSyncStatus('Skupina je online. Odkaz můžeš poslat ostatním členům.');
-  document.getElementById('groupSwitcher').open=false;
-  const link=shareLink(remoteToken);
-  try{await navigator.clipboard.writeText(link);alert('Sdílecí odkaz byl vytvořen a zkopírován. Každý, kdo ho má, může skupinu upravovat.')}
-  catch{alert('Sdílecí odkaz byl vytvořen. Klikni na „Kopírovat odkaz“ a pošli ho ostatním.')}
- }catch(err){setSyncStatus('Sdílení se nepodařilo: '+err.message);alert('Skupinu se nepodařilo sdílet. '+err.message)}
- finally{button.disabled=false}
-});
-document.getElementById('copyShareLink').addEventListener('click',async()=>{
- const url=new URL(location.href);if(remoteToken){url.searchParams.set('group',remoteToken);url.searchParams.set('nazev',slugifyName(state.name))}
- const link=remoteToken?shareLink(remoteToken):url.href;
- try{await navigator.clipboard.writeText(link);setSyncStatus('Sdílecí odkaz je zkopírovaný.')}
- catch{prompt('Zkopíruj tento odkaz:',link)}
-});
-async function loadSharedGroup(){
- const token=new URLSearchParams(location.search).get('group');
- if(!token)return;
- // Při obnovení už máme konkrétní vybranou skupinu v _activeGroup. Nenecháme opožděné načtení tokenu z URL přepnout aplikaci na jinou skupinu.
- if(reopenGroupInUrl&&database.groups.some(g=>g.id===reopenGroupInUrl))return;
- setSyncStatus('Načítám sdílenou skupinu…');
- try{
-  const response=await jsonp({action:'read',token});
-  if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
-  const remote=response.group, data=remote.data||{};
-  // Rozpoznáme skupinu podle jejího tokenu, abychom při otevření jiného odkazu nepřepsali předchozí skupinu.
-  const mappedId=Object.keys(remoteTokens).find(id=>remoteTokens[id]===token&&database.groups.some(g=>g.id===id));
-  const groupId=mappedId||remote.id||crypto.randomUUID();
-  const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[])};
-  const i=database.groups.findIndex(g=>g.id===groupId);
-  if(i>=0)database.groups[i]=group;else database.groups.push(group);
-  state=group;database.activeGroupId=group.id;activeGroupId=group.id;
-  rememberRemoteToken(activeGroupId,token);remoteToken=token;
-  persistDatabase();render();updatePageTitle();updateShareUrl();
-  document.getElementById('copyShareLink').hidden=false;
-  setSyncStatus('Připojeno ke sdílené skupině „'+group.name+'“. Změny se ukládají online.');
- }catch(err){setSyncStatus('Sdílenou skupinu se nepodařilo načíst: '+err.message);alert('Odkaz na sdílenou skupinu nefunguje. '+err.message)}
-}
-loadSharedGroup();
 const welcome=document.getElementById('welcome');
 const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport')];
-function showApp(){welcome.hidden=true;appNodes.forEach(el=>el.classList.remove('app-content-hidden'))}
-if(!hasSharedGroupInUrl&&!reopenGroupInUrl){appNodes.forEach(el=>el.classList.add('app-content-hidden'));document.getElementById('continueWelcome').hidden=database.groups.length===0;}
-else welcome.hidden=true;
-document.getElementById('continueWelcome').addEventListener('click',showApp);
-document.getElementById('refreshAppFooter').addEventListener('click',()=>{const url=new URL(window.location.href);url.searchParams.set('_refresh',Date.now().toString());if(activeGroupId)url.searchParams.set('_activeGroup',activeGroupId);const selectedToken=remoteTokens[activeGroupId]||'';if(selectedToken){url.searchParams.set('group',selectedToken);url.searchParams.set('nazev',slugifyName(state.name))}else{url.searchParams.delete('group');url.searchParams.delete('nazev')}window.location.replace(url.toString())});
+const inviteDialog=document.getElementById('inviteDialog');
+const joinDialog=document.getElementById('joinDialog');
+const joinCode=document.getElementById('joinCode');
+const joinStatus=document.getElementById('joinStatus');
+const joinSubmit=document.getElementById('joinSubmit');
+const closeJoin=document.getElementById('closeJoin');
+
+function showApp(){
+ welcome.hidden=true;
+ appNodes.forEach(el=>el.classList.remove('app-content-hidden'));
+ updatePageTitle();
+}
+function showJoinDialog(value=''){
+ joinCode.value=value;
+ joinStatus.textContent='';
+ if(!joinDialog.open)joinDialog.showModal();
+}
+document.querySelectorAll('[data-join-group]').forEach(button=>button.addEventListener('click',()=>showJoinDialog()));
+closeJoin.addEventListener('click',()=>joinDialog.close());
+joinDialog.addEventListener('cancel',event=>{if(joinSubmit.disabled)event.preventDefault()});
+
+document.getElementById('shareGroup').addEventListener('click',async event=>{
+ const button=event.currentTarget;
+ const group=state;
+ button.disabled=true;
+ try{
+  let token=remoteTokens[group.id];
+  if(!token){
+   setSyncStatus('Vytvářím online skupinu…');
+   const created=await jsonp({action:'create',name:group.name});
+   if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
+   token=created.group.token;
+   const data={name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]};
+   await postRemote(token,data);
+   const saved=await jsonp({action:'read',token});
+   if(!saved.ok||!saved.group?.data||!Object.entries(data).every(([key,value])=>
+    JSON.stringify(saved.group.data[key]??[])===JSON.stringify(value))){
+    throw new Error('Databáze nepotvrdila uložení celé skupiny.');
+   }
+   rememberRemoteToken(group.id,token);
+  }
+  if(activeGroupId===group.id){
+   updateShareUrl();
+   setSyncStatus('Skupina je sdílená online.');
+  }
+  document.getElementById('inviteTitle').textContent='Sdílet skupinu „'+group.name+'“';
+  document.getElementById('inviteLink').value=shareLink(token);
+  document.getElementById('inviteCode').value=token;
+  document.getElementById('copyInviteStatus').textContent='';
+  inviteDialog.showModal();
+ }catch(err){
+  setSyncStatus('Sdílení se nepodařilo: '+err.message);
+  alert('Skupinu se nepodařilo sdílet. '+err.message);
+ }finally{button.disabled=false}
+});
+for(const [buttonId,inputId,label] of [['copyInviteLink','inviteLink','Odkaz'],['copyInviteCode','inviteCode','Kód']]){
+ document.getElementById(buttonId).addEventListener('click',async()=>{
+  const input=document.getElementById(inputId);
+  const status=document.getElementById('copyInviteStatus');
+  try{await navigator.clipboard.writeText(input.value);status.textContent=label+' zkopírován.'}
+  catch{input.focus();input.select();status.textContent='Zkopíruj vybraný text.'}
+ });
+}
+
+async function loadSharedGroup(token){
+ const response=await jsonp({action:'read',token});
+ if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
+ const remote=response.group, data=remote.data||{};
+ const existing=database.groups.find(group=>remoteTokens[group.id]===token);
+ const groupId=existing?.id||crypto.randomUUID();
+ const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[])};
+ if(existing)Object.assign(existing,group);else database.groups.push(group);
+ rememberRemoteToken(groupId,token);
+ showApp();
+ activateGroup(groupId);
+ setSyncStatus('Připojeno ke sdílené skupině „'+group.name+'“.');
+}
+async function joinGroup(token){
+ if(!token||token.length>256||/\s/.test(token)){
+  joinStatus.textContent='Zadej platný kód nebo pozvánkový odkaz.';
+  return;
+ }
+ joinSubmit.disabled=true;
+ closeJoin.disabled=true;
+ joinStatus.textContent='Načítám skupinu…';
+ try{await loadSharedGroup(token);joinDialog.close()}
+ catch(err){joinStatus.textContent='Připojení se nepodařilo. '+err.message}
+ finally{joinSubmit.disabled=false;closeJoin.disabled=false}
+}
+document.getElementById('joinForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ joinGroup(parseInvite(joinCode.value));
+});
+if(reopenGroupInUrl&&!inviteToken)showApp();
+else appNodes.forEach(el=>el.classList.add('app-content-hidden'));
+if(inviteToken){
+ // A legacy URL can contain the active group's token after a previous visit.
+ if(reopenGroupInUrl&&remoteTokens[reopenGroupInUrl]===inviteToken&&!pageParams.has('_refresh')){
+  showApp();
+  updateShareUrl();
+ }else{
+  showJoinDialog(inviteToken);
+  joinGroup(inviteToken);
+ }
+}
+window.addEventListener('hashchange',()=>{
+ const token=new URLSearchParams(location.hash.slice(1)).get('group');
+ if(token&&!joinSubmit.disabled){showJoinDialog(token);joinGroup(token)}
+});
+document.getElementById('continueWelcome').hidden=database.groups.length===0;
+document.getElementById('continueWelcome').addEventListener('click',()=>{
+ showApp();
+ if(remoteToken)document.getElementById('refreshAppFooter').click();
+});
+document.getElementById('refreshAppFooter').addEventListener('click',async event=>{
+ if(!remoteToken){location.reload();return}
+ const button=event.currentTarget;
+ if(remoteSaving){alert('Počkej, než se změny uloží online.');return}
+ button.disabled=true;
+ try{await loadSharedGroup(remoteToken)}
+ catch(err){alert('Skupinu se nepodařilo obnovit. '+err.message)}
+ finally{button.disabled=false}
+});
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
   const backup={format:'kamaradske-uctovani-backup',version:1,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}')};
