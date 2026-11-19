@@ -498,6 +498,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   </div>
 </header>
 <main class="wrap">
+<p class="muted" id="syncWarning" role="status" hidden></p>
 <section id="welcome" class="card welcome-card" aria-labelledby="welcomeTitle">
   <h2 id="welcomeTitle">Společné výdaje na jednom místě</h2>
   <p class="welcome-intro">Zapisuj společné výdaje z výletu, dovolené nebo domácnosti. Aplikace spočítá, kdo komu kolik dluží. Skupinu můžeš sdílet odkazem nebo kódem.</p>
@@ -561,7 +562,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.5.4</span>
+  <span>Verze 1.6.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -674,7 +675,13 @@ let remoteTokens={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
 let remoteToken=remoteTokens[activeGroupId]||'';
 const remoteWrites=new Map();
-function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
+function setSyncStatus(message,warning=false){
+ const status=document.getElementById('syncStatus');
+ if(status.textContent!==message)status.textContent=message;
+ const notice=document.getElementById('syncWarning');
+ notice.hidden=!warning;
+ if(warning&&notice.textContent!==message)notice.textContent=message;
+}
 function rememberRemoteToken(groupId,token){
  const newlyConnected=remoteTokens[groupId]!==token;
  remoteTokens[groupId]=token;
@@ -715,32 +722,51 @@ function postRemote(token,data){
   document.body.append(iframe,form);
  });
 }
-function syncRemote(token=remoteToken,group=state){
- if(!token)return;
- const data=JSON.parse(JSON.stringify({name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]}));
- const queue=remoteWrites.get(token);
- if(queue){queue.next=data;return}
- const pending={next:data};
- remoteWrites.set(token,pending);
- void writeRemoteQueue(token,pending);
-}
-async function writeRemoteQueue(token,pending){
- try{
-  while(pending.next){
-   const data=pending.next;
-   pending.next=null;
-   if(token===remoteToken)setSyncStatus('Ukládám změny online…');
-   try{
-    await postRemote(token,data);
-    void window.financePush?.publish(token).catch(()=>{});
-    if(token===remoteToken&&!pending.next)setSyncStatus('Skupina je synchronizovaná online.');
-   }catch(error){
-    if(token===remoteToken&&!pending.next)setSyncStatus('Změny jsou uložené v prohlížeči. Online uložení se nepodařilo: '+error.message);
-   }
+const groupSnapshot=g=>structuredClone({name:g.name,people:g.people,expenses:g.expenses,notes:g.notes||[]});
+const renderedGroups=new Map();
+const pendingEdits=database.pendingEdits ||= {};
+let localRevision=0;
+function syncRemote(token,group,base){
+ if(!token||!base)return;
+ const changes=[];
+ if(base.name!==group.name)changes.push({field:'name',before:base.name,after:group.name});
+ for(const field of ['people','expenses','notes']){
+  const before=new Map(base[field].map(row=>[row.id,row]));
+  const after=new Map(group[field].map(row=>[row.id,row]));
+  for(const id of new Set([...before.keys(),...after.keys()])){
+   const prev=before.get(id)??null,next=after.get(id)??null;
+   if(JSON.stringify(prev)!==JSON.stringify(next))changes.push({field,id,before:prev,after:structuredClone(next)});
   }
+ }
+ if(!changes.length)return;
+ (pendingEdits[group.id] ||= []).push(changes);
+}
+async function flushEdits(groupId,token){
+ if(!pendingEdits[groupId]?.length||remoteWrites.has(token))return;
+ remoteWrites.set(token,true);
+ try{
+  while(pendingEdits[groupId]?.length){
+   const result=await fetch('https://kamaradske-uctovani-push.rek-lubomir.workers.dev/merge',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({token,changes:pendingEdits[groupId][0]}),signal:AbortSignal.timeout(45000)
+   });
+   if(result.status===409)throw new Error('Tentýž záznam se mezitím změnil na jiném zařízení. Místní změna zůstává uložená.');
+   if(!result.ok||!(await result.json()).ok)throw new Error('Server zatím nepotvrdil uložení.');
+   pendingEdits[groupId].shift();
+   if(!pendingEdits[groupId].length)delete pendingEdits[groupId];
+   persistDatabase();
+   void window.financePush?.publish(token).catch(()=>{});
+  }
+ }catch(error){
+  if(groupId===activeGroupId)setSyncStatus('Změny zůstávají v zařízení. '+error.message+' Synchronizaci zopakuji automaticky.',true);
  }finally{remoteWrites.delete(token)}
 }
-const save=()=>{const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;persistDatabase();render();if(remoteToken)syncRemote()};
+const save=()=>{
+ localRevision++;
+ syncRemote(remoteToken,state,renderedGroups.get(state.id));
+ persistDatabase();render();
+ if(remoteToken)void flushEdits(state.id,remoteToken);
+};
 function sortedPeople(){return [...state.people].sort((a,b)=>a.name.localeCompare(b.name,'cs',{sensitivity:'base'}))} function balances(){const b=Object.fromEntries(state.people.map(p=>[p.id,0]));for(const e of state.expenses){if(!(e.payer in b))continue;b[e.payer]+=Number(e.amount)||0;const ids=(e.participants||[]).filter(id=>id in b);if(!ids.length)continue;const weights=ids.map(id=>{const legacy=!e.shares;const n=legacy?1:Number(e.shares[id]);return Number.isFinite(n)&&n>0?n:0});const total=weights.reduce((s,n)=>s+n,0);if(total>0)ids.forEach((id,i)=>b[id]-=(Number(e.amount)||0)*weights[i]/total)}return b}
 function settlements(){const b=balances(),debtors=state.people.map(p=>({id:p.id,name:p.name,n:-(b[p.id]||0)})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),creditors=state.people.map(p=>({id:p.id,name:p.name,n:b[p.id]||0})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),out=[];let i=0,j=0;while(i<debtors.length&&j<creditors.length){let n=Math.min(debtors[i].n,creditors[j].n);out.push({from:debtors[i].name,to:creditors[j].name,amount:n});debtors[i].n-=n;creditors[j].n-=n;if(debtors[i].n<.01)i++;if(creditors[j].n<.01)j++}return out}
 function expenseMarkup(expense){
@@ -767,7 +793,8 @@ const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(St
  memberIdentity.innerHTML='<option value="">Neuvádět jméno</option>'+sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
  memberIdentity.value=state.people.some(p=>p.id===authorPreferences[activeGroupId])?authorPreferences[activeGroupId]:'';
 document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+esc(p.id)+'"><button class="danger" data-remove-person="'+esc(p.id)+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
-renderExpensePeople();
+renderedGroups.set(state.id,groupSnapshot(state));
+ renderExpensePeople();
  document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
 const expenseForm=document.getElementById('expenseForm');
@@ -787,6 +814,7 @@ const expenseFields=expenseForm.elements;
 const expenseError=document.getElementById('expenseError');
 const expenseSuccess=document.getElementById('expenseSuccess');
 let editedExpenseId=null;
+let originalEditedExpense;
 let expenseMessageTimer;
 let payerChosen=false;
 expenseFields.payer.addEventListener('change',()=>{payerChosen=true});
@@ -819,6 +847,7 @@ function setExpenseError(message=''){
 }
 function setExpenseEditorMode(id=null){
  editedExpenseId=id;
+ originalEditedExpense=id?JSON.stringify(state.expenses.find(e=>e.id===id)):null;
  document.getElementById('expenseFormTitle').textContent=id?'Upravit výdaj':'Nový výdaj';
  document.getElementById('saveExpense').textContent=id?'Uložit změny':'Uložit výdaj';
  document.getElementById('cancelExpenseEdit').hidden=!id;
@@ -862,6 +891,7 @@ function activateGroup(id){
  remoteToken=remoteTokens[activeGroupId]||'';
  updateShareUrl();
  persistDatabase();updatePageTitle();resetExpenseForm();document.getElementById('personForm').reset();document.getElementById('groupNoteForm').reset();render();
+ queueMicrotask(resumeSync);
  setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
 }
@@ -886,7 +916,7 @@ document.addEventListener('keydown',event=>{
 document.getElementById('groupNoteForm').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('groupNoteInput');const value=input.value.trim();if(!value)return;if(!Array.isArray(state.notes))state.notes=[];state.notes.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});input.value='';save();showNotification('note','Nová poznámka',value)});
 document.getElementById('groupNotesList').addEventListener('click',e=>{const button=e.target.closest('[data-delete-note]');if(!button)return;state.notes=(Array.isArray(state.notes)?state.notes:[]).filter(note=>note.id!==button.dataset.deleteNote);save()});
 document.getElementById('deleteGroup').addEventListener('click',async()=>{
- if(remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
+ if(pendingEdits[activeGroupId]?.length||remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
  const removedId=activeGroupId;
  const token=remoteToken;
  const groupName=state.name;
@@ -966,6 +996,7 @@ document.getElementById('cancelExpenseEdit').addEventListener('click',()=>{
 document.getElementById('deleteEditedExpense').addEventListener('click',()=>{
  if(!editedExpenseId||!confirm('Opravdu smazat tento výdaj?'))return;
  const expense=state.expenses.find(item=>item.id===editedExpenseId);
+ if(JSON.stringify(expense)!==originalEditedExpense){setExpenseError('Výdaj se mezitím změnil. Otevři ho znovu ze seznamu.');return}
  rememberLocalRemovals([editedExpenseId]);
  state.expenses=state.expenses.filter(item=>item.id!==editedExpenseId);
  resetExpenseForm();
@@ -998,6 +1029,7 @@ expenseForm.addEventListener('submit',event=>{
  }
  const index=state.expenses.findIndex(expense=>expense.id===editedExpenseId);
  if(editedExpenseId&&index<0){setExpenseError('Tento výdaj už ve skupině není.');return}
+ if(editedExpenseId&&JSON.stringify(state.expenses[index])!==originalEditedExpense){setExpenseError('Výdaj se mezitím změnil. Otevři ho znovu ze seznamu.');return}
  const fields={description,amount,payer,date,participants,shares};
  let savedExpense;
  if(index>=0){
@@ -1353,29 +1385,45 @@ function publishRemoteNotifications(token,group,localGroup,canRefresh=true){
  }
 }
 async function pollGroupNotifications(){
- const token=remoteToken;
- const refreshButton=document.getElementById('refreshSharedGroup');
- if(!notificationPreferences.enabled||!notificationOptions.some(option=>notificationPreferences[option.dataset.notificationType])||
-    !token||!welcome.hidden||document.hidden||remoteWrites.has(token)||refreshButton.disabled||notificationReadInFlight)return;
+ const token=remoteToken,id=activeGroupId,revision=localRevision;
+ if(document.hidden||!token||notificationReadInFlight||remoteWrites.has(token))return;
  notificationReadInFlight=true;
  try{
+  await flushEdits(id,token);
+  if(pendingEdits[id]?.length||remoteWrites.has(token))return;
   const response=await jsonp({action:'read',token});
-  if(response?.ok&&response.group?.data&&remoteToken===token&&welcome.hidden&&!document.hidden&&
-     !remoteWrites.has(token)&&!refreshButton.disabled){
-   publishRemoteNotifications(token,response.group.data,state);
+  if(remoteToken!==token||activeGroupId!==id||revision!==localRevision||pendingEdits[id]?.length||remoteWrites.has(token))return;
+  const data=response?.group?.data;
+  if(!response.ok||!data||!Array.isArray(data.expenses)||!Array.isArray(data.people))throw new Error();
+  const incoming={name:data.name||response.group.name||state.name,people:data.people,expenses:data.expenses,notes:data.notes??[]};
+  if(JSON.stringify(groupSnapshot(state))!==JSON.stringify(incoming)){
+   if(!welcome.hidden)publishRemoteNotifications(token,incoming,state,false);
+   Object.assign(state,incoming);
+   persistDatabase();render();updatePageTitle();updateWelcomeActions();
   }
+  setSyncStatus('Skupina je synchronizovaná online.');
  }catch{
-  // A missed check is retried while the page is visible.
+  if(token===remoteToken)setSyncStatus('Online změny se nepodařilo načíst. Synchronizaci zopakuji automaticky.',true);
  }finally{notificationReadInFlight=false}
 }
-setInterval(pollGroupNotifications,25000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollGroupNotifications()});
+function resumeSync(){
+ if(document.hidden)return;
+ for(const id of Object.keys(pendingEdits)){
+  if(id!==activeGroupId&&remoteTokens[id])void flushEdits(id,remoteTokens[id]);
+ }
+ void pollGroupNotifications();
+}
+setInterval(resumeSync,6000);
+document.addEventListener('visibilitychange',resumeSync);
+window.addEventListener('online',resumeSync);
+window.addEventListener('pageshow',resumeSync);
+window.addEventListener('offline',()=>{if(remoteToken)setSyncStatus('Bez připojení. Po návratu internetu se skupina automaticky synchronizuje.',true)});
+queueMicrotask(resumeSync);
 
 
-let returningHome=false;
 document.getElementById('backHome').addEventListener('click',event=>{
  event.preventDefault();
- returningHome=true;
+
  clearNotificationPopups();
  const url=new URL(location.href);
  for(const key of ['_activeGroup','group','nazev','_refresh'])url.searchParams.delete(key);
@@ -1393,6 +1441,7 @@ function showApp(){
  welcome.hidden=true;
  appNodes.forEach(el=>el.classList.remove('app-content-hidden'));
  updatePageTitle();
+ queueMicrotask(resumeSync);
 }
 function showJoinDialog(value=''){
  joinCode.value=value;
@@ -1424,7 +1473,7 @@ document.getElementById('shareGroup').addEventListener('click',async event=>{
     throw new Error('Databáze nepotvrdila uložení celé skupiny.');
    }
    rememberRemoteToken(group.id,token);
-   if(snapshot()!==payload)syncRemote(token,group);
+   if(snapshot()!==payload){syncRemote(token,group,data);persistDatabase();void flushEdits(group.id,token)}
   }
   if(activeGroupId===group.id){
    if(welcome.hidden)updateShareUrl();
@@ -1453,7 +1502,7 @@ for(const [buttonId,inputId,label] of [['copyInviteLink','inviteLink','Odkaz'],[
 async function loadSharedGroup(token,{refresh=false}={}){
  const startingGroup=state;
  const startingData=JSON.stringify(startingGroup);
- if(remoteWrites.has(token))throw new Error('Počkej na dokončení online ukládání.');
+ if(pendingEdits[database.groups.find(g=>remoteTokens[g.id]===token)?.id]?.length||remoteWrites.has(token))throw new Error('Počkej na dokončení online ukládání.');
  const response=await jsonp({action:'read',token});
  if(refresh&&!welcome.hidden)return;
  if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
@@ -1511,17 +1560,13 @@ updateWelcomeActions();
 document.getElementById('continueWelcome').addEventListener('click',()=>{
  showApp();
  updateShareUrl();
- if(remoteToken&&!returningHome)document.getElementById('refreshSharedGroup').click();
- returningHome=false;
+ resumeSync();
+
 });
 document.getElementById('refreshSharedGroup').addEventListener('click',async event=>{
- if(!remoteToken)return;
  const button=event.currentTarget;
- if(remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
  button.disabled=true;
- try{await loadSharedGroup(remoteToken,{refresh:true})}
- catch(err){alert('Skupinu se nepodařilo obnovit. '+err.message)}
- finally{button.disabled=false}
+ try{await pollGroupNotifications()}finally{button.disabled=false}
 });
 if(pageParams.has('_push')&&reopenGroupInUrl===activeGroupId&&remoteToken&&!inviteToken){
  const url=new URL(location.href);
@@ -1637,7 +1682,7 @@ document.getElementById('exportDataWelcome').addEventListener('click',()=>{
   if(!groups.length)throw new Error('V tomto prohlížeči nejsou uložené žádné skupiny.');
   const tokens=Object.fromEntries(groups.filter(group=>remoteTokens[group.id]).map(group=>[group.id,remoteTokens[group.id]]));
   const payload={format:transferFormat,version:1,exportedAt:new Date().toISOString(),
-   database:{...database,groups},remoteTokens:tokens};
+   database:{activeGroupId,groups},remoteTokens:tokens};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a');
