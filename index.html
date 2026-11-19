@@ -248,7 +248,21 @@ main.wrap{width:100%;overflow-x:clip}
   border-radius: 50%;
   box-shadow: 0 4px 16px #173f3540;
 }
-#quickExpense span {font-size: 34px; font-weight: 500; line-height: 1;}
+#quickExpense span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+#quickExpense span::before, #quickExpense span::after {
+  content: "";
+  grid-area: 1 / 1;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+#quickExpense span::after {transform: rotate(90deg);}
 #quickExpense:focus-visible {outline: 3px solid #41916d; outline-offset: 3px;}
 #expenses:not(.hidden) ~ #quickExpense {display: none;}
 main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
@@ -400,9 +414,9 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.0.3</span>
+  <span>Verze 1.0.4</span>
 </footer>
-<button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true">+</span></button>
+<button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
   <h2 id="inviteTitle">Sdílet skupinu</h2>
