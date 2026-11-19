@@ -561,7 +561,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.5.0</span>
+  <span>Verze 1.5.1</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -624,7 +624,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <button class="secondary" id="closeJoin" type="button">Zavřít</button>
   </form>
 </dialog>
-<script src="./push-client.js"></script>
+<script src="./push-client.js?v=1.5.1"></script>
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -1133,9 +1133,9 @@ const testPush=document.getElementById('testPush');
 testPush.onclick=async()=>{
  testPush.disabled=true;
  try{
-  await window.financePush.test(Object.values(remoteTokens).find(Boolean),pushSubscription);
+  await window.financePush.test(remoteTokens,activeGroupId,pushSubscription,selectedPushTypes());
   pushStatus.textContent='Test je naplánovaný. Teď aplikaci zavři nebo zamkni telefon.';
- }catch{pushStatus.textContent='Test se nepodařilo naplánovat. Zkontroluj připojení a povolení oznámení.'}
+ }catch(error){pushStatus.textContent='Test se nepodařilo naplánovat. '+(error.name==='TypeError'?'Nepodařilo se spojit se službou.':error.message)}
  finally{testPush.disabled=false}
 };
 async function preparePushSettings(){

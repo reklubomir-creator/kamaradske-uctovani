@@ -12,7 +12,12 @@
       body: content ? JSON.stringify(content) : undefined,
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) throw new Error('Služba pro upozornění neodpověděla.');
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      const error = new Error('Služba pro upozornění vrátila chybu HTTP ' + response.status + '.');
+      error.reason = detail.error;
+      throw error;
+    }
     return response.json();
   }
 
@@ -77,8 +82,26 @@
     await request('/sync', { token, sender });
   }
 
-  async function test(token, subscription) {
-    await request('/test', { token, endpoint: subscription.endpoint });
+  async function test(groups, activeId, subscription, types) {
+    const entries = Object.entries(groups).filter(([, token]) => token);
+    entries.sort(([a], [b]) => Number(b === activeId) - Number(a === activeId));
+    let failure = new Error('Pro test je potřeba sdílená skupina.');
+    for (const [groupId, token] of entries) {
+      const payload = {token, endpoint: subscription.endpoint};
+      try {
+        try {
+          return await request('/test', payload);
+        } catch (error) {
+          if (error.reason !== 'Device not subscribed') throw error;
+          await apply(subscription, {[groupId]: token}, types);
+          return await request('/test', payload);
+        }
+      } catch (error) {
+        if (!['Invalid group', 'Group not found'].includes(error.reason)) throw error;
+        failure = new Error('Sdílenou skupinu se nepodařilo ověřit. Zkontroluj, zda ji lze obnovit.');
+      }
+    }
+    throw failure;
   }
 
   window.financePush = { test, supported, configuration, currentSubscription, enroll, apply, stop, publish };
