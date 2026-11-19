@@ -561,7 +561,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.5.3</span>
+  <span>Verze 1.5.4</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -772,7 +772,10 @@ renderExpensePeople();
 }
 const expenseForm=document.getElementById('expenseForm');
 const memberIdentity=document.getElementById('memberIdentity');
-memberIdentity.onchange=()=>rememberExpenseAuthor(memberIdentity.value);
+memberIdentity.onchange=()=>{
+ rememberExpenseAuthor(memberIdentity.value);
+ renderExpensePeople();
+};
 const authorPreferencesKey='kamaradske-uctovani-expense-authors';
 let authorPreferences=Object.create(null);
 try{Object.assign(authorPreferences,JSON.parse(localStorage.getItem(authorPreferencesKey))||{})}catch{}
@@ -785,19 +788,24 @@ const expenseError=document.getElementById('expenseError');
 const expenseSuccess=document.getElementById('expenseSuccess');
 let editedExpenseId=null;
 let expenseMessageTimer;
+let payerChosen=false;
+expenseFields.payer.addEventListener('change',()=>{payerChosen=true});
 function renderExpensePeople(preserveDraft=true){
- const payer=expenseFields.payer.value;
+ if(!preserveDraft)payerChosen=false;
+ const currentPayer=expenseFields.payer.value;
+ const keepPayer=(payerChosen||editedExpenseId)&&state.people.some(person=>person.id===currentPayer);
+ const payer=keepPayer?currentPayer:authorPreferences[activeGroupId];
  const checks=new Map([...expenseForm.querySelectorAll('.person-check')].map(input=>{
   const weight=expenseFields.namedItem('share_'+input.value);
   return [input.value,{checked:input.checked,weight:editedExpenseId||weight.value!==weight.defaultValue?weight.value:undefined}];
  }));
  const memberOptions=sortedPeople().map(person=>'<option value="'+esc(person.id)+'">'+esc(person.name)+'</option>').join('');
  expenseFields.payer.innerHTML=memberOptions;
+ if(state.people.some(person=>person.id===payer))expenseFields.payer.value=payer;
  document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+esc(p.id)+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+esc(p.id)+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
  document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
 
  if(!preserveDraft)return;
- if(state.people.some(person=>person.id===payer))expenseFields.payer.value=payer;
  for(const input of expenseForm.querySelectorAll('.person-check')){
   const previous=checks.get(input.value);
   if(!previous)continue;
