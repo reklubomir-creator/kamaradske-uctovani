@@ -90,11 +90,13 @@
       const payload = {token, endpoint: subscription.endpoint};
       try {
         try {
-          return await request('/test', payload);
+          await request('/test', payload);
+          return groupId;
         } catch (error) {
           if (error.reason !== 'Device not subscribed') throw error;
           await apply(subscription, {[groupId]: token}, types);
-          return await request('/test', payload);
+          await request('/test', payload);
+          return groupId;
         }
       } catch (error) {
         if (!['Invalid group', 'Group not found'].includes(error.reason)) throw error;
@@ -104,5 +106,6 @@
     throw failure;
   }
 
-  window.financePush = { test, supported, configuration, currentSubscription, enroll, apply, stop, publish };
+  const testStatus = (token, endpoint) => request('/test-status', {token, endpoint});
+  window.financePush = { testStatus, test, supported, configuration, currentSubscription, enroll, apply, stop, publish };
 })();

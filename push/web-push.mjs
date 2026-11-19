@@ -68,7 +68,7 @@ export async function deliverPush(subscription, payload, vapid, appOrigin) {
       "Content-Type": "application/octet-stream",
       Authorization: "vapid t=" + unsigned + "." + encode64(new Uint8Array(signature)) + ", k=" + vapid.publicKey,
       TTL: "3600",
-      Urgency: "normal",
+      Urgency: "high",
     },
     body: await encryptPush(payload, subscription),
   });

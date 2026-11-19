@@ -131,8 +131,15 @@ export class PushStore {
       if (due > now) { next = Math.min(next, due); continue; }
       const device = await this.storage.get(key.slice(5));
       if (device) {
-        const response = await deliverPush(device, {title: "Test upozornění", body: "Oznámení na tomto zařízení fungují.", groupId: device.groupId}, await getKey(this.env), this.env.APP_ORIGIN);
-        if (response.status >= 500 || response.status === 429) throw new Error("Retry test delivery");
+        const resultKey = "result:" + key.slice(5);
+        try {
+          const response = await deliverPush(device, {title: "Test upozornění", body: "Oznámení na tomto zařízení fungují.", groupId: device.groupId}, await getKey(this.env), this.env.APP_ORIGIN);
+          await this.storage.put(resultKey, {state: response.ok ? "accepted" : "rejected", code: response.status});
+          if (response.status === 429 || response.status >= 500) throw new Error("Retry");
+        } catch (error) {
+          if (error.message !== "Retry") await this.storage.put(resultKey, {state: "failed"});
+          throw error;
+        }
       }
       await this.storage.delete(key);
     }
@@ -150,6 +157,9 @@ export class PushStore {
       return json(key);
     }
     const data = await request.json();
+    if (path === "/test-status") {
+      return json(await this.storage.get("result:sub:" + await digest(data.endpoint)) || {state: "unknown"});
+    }
     if (path === "/test") {
       const id = "sub:" + await digest(data.endpoint);
       if (!await this.storage.get(id)) return json({error: "Device not subscribed"}, 404);
@@ -157,6 +167,7 @@ export class PushStore {
       const due = Date.now() + 20000;
       if (!await this.storage.get(key)) {
         await this.storage.put(key, due);
+        await this.storage.put("result:" + id, {state: "pending"});
       }
       const alarm = await this.storage.getAlarm();
       if (alarm === null || alarm > due) await this.storage.setAlarm(due);
@@ -216,7 +227,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     try {
       if (path === "/config" && request.method === "GET") return reply({ publicKey: (await getKey(env)).publicKey });
-      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/sync"].includes(path)) return reply({ error: "Not found" }, 404);
+      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/test-status", "/sync"].includes(path)) return reply({ error: "Not found" }, 404);
       let data;
       try { data = await boundedJson(request); }
       catch { return reply({ error: "Invalid body" }, 400); }
@@ -225,7 +236,7 @@ export default {
         !validSubscription(data.subscription) || typeof data.groupId !== "string" || !/^[\w-]{1,80}$/.test(data.groupId)
         || !Array.isArray(data.types) || data.types.length > EVENT_TYPES.length || data.types.some(type => !EVENT_TYPES.includes(type))
       )) return reply({ error: "Invalid subscription" }, 400);
-      if (["/unsubscribe", "/test"].includes(path) && (typeof data.endpoint !== "string" || data.endpoint.length > 2048)) return reply({ error: "Invalid endpoint" }, 400);
+      if (["/unsubscribe", "/test", "/test-status"].includes(path) && (typeof data.endpoint !== "string" || data.endpoint.length > 2048)) return reply({ error: "Invalid endpoint" }, 400);
       const id = env.PUSH_STORE.idFromName("group:" + await digest(data.token));
       const result = await env.PUSH_STORE.get(id).fetch("https://internal" + path, {
         method: "POST", body: JSON.stringify(data),

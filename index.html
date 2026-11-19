@@ -561,7 +561,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.5.2</span>
+  <span>Verze 1.5.3</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -623,7 +623,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <button class="secondary" id="closeJoin" type="button">Zavřít</button>
   </form>
 </dialog>
-<script src="./push-client.js?v=1.5.1"></script>
+<script src="./push-client.js?v=1.5.3"></script>
 <script>
 const KEY='kamaradske-uctovani-v1';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -1136,11 +1136,26 @@ const testPush=document.getElementById('testPush');
 testPush.onclick=async()=>{
  testPush.disabled=true;
  try{
-  await window.financePush.test(remoteTokens,activeGroupId,pushSubscription,selectedPushTypes());
+  const testedGroup=await window.financePush.test(remoteTokens,activeGroupId,pushSubscription,selectedPushTypes());
+  localStorage.setItem('finance-last-push-test',testedGroup);
+  setTimeout(refreshTestStatus,23000);
   pushStatus.textContent='Test je naplánovaný. Teď aplikaci zavři nebo zamkni telefon.';
  }catch(error){pushStatus.textContent='Test se nepodařilo naplánovat. '+(error.name==='TypeError'?'Nepodařilo se spojit se službou.':error.message)}
  finally{testPush.disabled=false}
 };
+async function refreshTestStatus(){
+ if(!notificationsDialog.open||!pushSubscription)return;
+ const token=remoteTokens[localStorage.getItem('finance-last-push-test')];
+ if(!token)return;
+ try{
+  const result=await window.financePush.testStatus(token,pushSubscription.endpoint);
+  const messages={pending:'Test čeká na odeslání.',accepted:'Doručovací služba test přijala. Pokud ho nevidíš, zkontroluj zobrazení oznámení na zamčené obrazovce a režim Soustředění.',failed:'Serveru se test nepodařilo odeslat.'};
+  if(result.state==='rejected'){
+   pushStatus.textContent='Doručovací služba odmítla test (HTTP '+result.code+').'+([404,410].includes(result.code)?' Vypni a znovu povol systémová oznámení.':'');
+  }else if(messages[result.state])pushStatus.textContent=messages[result.state];
+ }catch{pushStatus.textContent='Výsledek testu se nepodařilo načíst.'}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshTestStatus()});
 async function preparePushSettings(){
  testPush.hidden=true;
  const client=window.financePush;
@@ -1157,6 +1172,7 @@ async function preparePushSettings(){
    testPush.hidden=!Object.values(remoteTokens).some(Boolean);
    pushToggle.disabled=false;
    pushStatus.textContent='Toto zařízení je přihlášené k systémovým oznámením.';
+   await refreshTestStatus();
    return;
   }
   if(!Object.values(remoteTokens).some(Boolean)){
