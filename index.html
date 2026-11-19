@@ -19,7 +19,7 @@
 <title>Kamarádské účtování</title>
 <style>
 :root{color-scheme:light;--ink:#1d302b;--muted:#697a74;--green:#173f35;--mint:#e5f3eb;--line:#e2e9e5;--paper:#f6f8f6;--white:#fff;--orange:#f3b85c;--red:#b94747}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.top{background:var(--green);color:#fff;padding:25px 20px 38px}.top-inner,main{max-width:980px;margin:auto}.brand{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:700}.top h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:10px 0}.top p{margin:0;opacity:.82}.wrap{max-width:980px;margin:-20px auto 50px;padding:0 16px}.group-switcher{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:16px;box-shadow:0 3px 14px #193b2b08}.group-switcher summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:13px 16px;min-height:50px}.group-switcher summary::-webkit-details-marker{display:none}.group-switcher summary:after{content:"▾";color:var(--muted);margin-left:auto;display:inline-block;flex-shrink:0;transition:transform .18s ease}.group-switcher[open] summary:after{transform:rotate(180deg)}.group-switcher[open] summary{border-bottom:1px solid var(--line)}.group-switcher summary span{color:var(--muted);font-size:14px}.group-switcher summary strong{overflow-wrap:anywhere}.group-menu{padding:14px 16px}.group-menu .row{grid-template-columns:1fr 1fr}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:16px}.tab{border:1px solid var(--line);background:white;border-radius:999px;padding:10px 15px;color:var(--muted);white-space:nowrap}.tab.active{background:var(--green);border-color:var(--green);color:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 3px 14px #193b2b08}.card h2{font-size:18px;margin:0 0 14px}.wide{grid-column:1/-1}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.stat{background:var(--mint);padding:14px;border-radius:14px}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:clamp(17px,3vw,24px);display:block;margin-top:4px;overflow-wrap:anywhere}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.field label{font-size:13px;font-weight:700;color:var(--muted)}input,select{width:100%;border:1px solid #d6e0da;background:#fff;border-radius:10px;padding:11px 12px;color:var(--ink);min-width:0}input:focus,select:focus{outline:2px solid #8bbca5;border-color:transparent}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary,.secondary,.danger{border:0;border-radius:10px;padding:11px 15px;font-weight:700}.primary{background:var(--green);color:white}.secondary{background:var(--mint);color:var(--green)}.danger{background:#fff0ef;color:var(--red);padding:7px 10px;font-size:13px}.full{width:100%}.list{display:flex;flex-direction:column;gap:10px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0;padding-bottom:0}.item-title{font-weight:700}.share-input{width:76px;padding:7px 8px}.participant-row{display:flex;align-items:center;gap:8px;padding:6px 0}.participant-row .person-check{width:auto}.participant-row .share-input{margin-left:auto}.person-share{display:flex;align-items:center;gap:8px}.person-share input{width:78px;padding:7px 8px}.muted{color:var(--muted);font-size:13px}.amount{font-weight:800;white-space:nowrap}.positive{color:#23734e}.negative{color:var(--red)}.empty{padding:16px;text-align:center;color:var(--muted);background:#f8faf8;border-radius:12px;font-size:14px}.pill{display:inline-block;background:#f0f4f1;border-radius:999px;padding:4px 8px;font-size:12px;color:var(--muted)}.success-message{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:#e5f3eb;border:1px solid #b7ddc7;color:#175638;font-weight:700;font-size:14px}.success-message.show{display:block;animation:successIn .2s ease-out}@keyframes successIn{from{opacity:.3;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}.notice{background:#fff6e6;border:1px solid #f1dfb8;color:#795b24;border-radius:12px;padding:12px 14px;font-size:13px;margin-top:16px}.hidden{display:none!important}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-head h2{margin-bottom:0}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}@media(max-width:650px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.stats{gap:7px}.stat{padding:11px}.card{padding:16px}.top{padding-top:22px}.row{grid-template-columns:1fr 1fr}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.top{background:var(--green);color:#fff;padding:25px 20px 38px}.top-inner,main{max-width:980px;margin:auto}.brand{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:700}.top h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:10px 0}.top p{margin:0;opacity:.82}.wrap{max-width:980px;margin:-20px auto 50px;padding:0 16px}.group-menu{padding:14px 16px}.group-menu .row{grid-template-columns:1fr 1fr}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:16px}.tab{border:1px solid var(--line);background:white;border-radius:999px;padding:10px 15px;color:var(--muted);white-space:nowrap}.tab.active{background:var(--green);border-color:var(--green);color:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 3px 14px #193b2b08}.card h2{font-size:18px;margin:0 0 14px}.wide{grid-column:1/-1}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.stat{background:var(--mint);padding:14px;border-radius:14px}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:clamp(17px,3vw,24px);display:block;margin-top:4px;overflow-wrap:anywhere}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.field label{font-size:13px;font-weight:700;color:var(--muted)}input,select{width:100%;border:1px solid #d6e0da;background:#fff;border-radius:10px;padding:11px 12px;color:var(--ink);min-width:0}input:focus,select:focus{outline:2px solid #8bbca5;border-color:transparent}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary,.secondary,.danger{border:0;border-radius:10px;padding:11px 15px;font-weight:700}.primary{background:var(--green);color:white}.secondary{background:var(--mint);color:var(--green)}.danger{background:#fff0ef;color:var(--red);padding:7px 10px;font-size:13px}.full{width:100%}.list{display:flex;flex-direction:column;gap:10px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0;padding-bottom:0}.item-title{font-weight:700}.share-input{width:76px;padding:7px 8px}.participant-row{display:flex;align-items:center;gap:8px;padding:6px 0}.participant-row .person-check{width:auto}.participant-row .share-input{margin-left:auto}.person-share{display:flex;align-items:center;gap:8px}.person-share input{width:78px;padding:7px 8px}.muted{color:var(--muted);font-size:13px}.amount{font-weight:800;white-space:nowrap}.positive{color:#23734e}.negative{color:var(--red)}.empty{padding:16px;text-align:center;color:var(--muted);background:#f8faf8;border-radius:12px;font-size:14px}.pill{display:inline-block;background:#f0f4f1;border-radius:999px;padding:4px 8px;font-size:12px;color:var(--muted)}.success-message{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:#e5f3eb;border:1px solid #b7ddc7;color:#175638;font-weight:700;font-size:14px}.success-message.show{display:block;animation:successIn .2s ease-out}@keyframes successIn{from{opacity:.3;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}.notice{background:#fff6e6;border:1px solid #f1dfb8;color:#795b24;border-radius:12px;padding:12px 14px;font-size:13px;margin-top:16px}.hidden{display:none!important}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-head h2{margin-bottom:0}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}@media(max-width:650px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.stats{gap:7px}.stat{padding:11px}.card{padding:16px}.top{padding-top:22px}.row{grid-template-columns:1fr 1fr}}
 
 /* Šipka u rozbalovacích podílů */
 .expense-breakdown-toggle{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -32,7 +32,7 @@ html{scroll-behavior:smooth}
 body{overflow-wrap:anywhere}
 button{touch-action:manipulation}
 .top-inner,main,.wrap{width:100%;min-width:0}
-.card,.panel,.grid,.item,.section-head,.group-switcher{min-width:0}
+.card,.panel,.grid,.item,.section-head,
 .tabs{scrollbar-width:thin}
 .item>div:first-child{min-width:0}
 .item-title{overflow-wrap:anywhere}
@@ -57,9 +57,9 @@ button{touch-action:manipulation}
   .top h1{font-size:28px;margin:8px 0}
   .top p{font-size:14px}
   .wrap{padding:0 10px}
-  .group-switcher summary{padding:12px;gap:6px;flex-wrap:wrap}
-  .group-switcher summary span{font-size:12px}
-  .group-switcher summary strong{font-size:14px;max-width:100%;overflow-wrap:anywhere}
+
+
+
   .group-menu{padding:12px}
   .group-menu .row{grid-template-columns:minmax(0,1fr)}
   .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:7px}
@@ -270,7 +270,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 .group-options > summary {display: list-item; padding: 4px 0; min-height: 0;}
 .group-options > summary::after {content: none;}
 .group-options .danger, .expense-form-actions .danger {min-height: 44px;}
-.overview-notes {margin-top: 16px;}
+.overview-notes {margin-bottom: 16px;}
 .overview-actions .compact-actions {padding: 0 12px 12px;}
 .overview-actions {display: grid; gap: 8px;}
 .footer {display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px;}
@@ -282,6 +282,44 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 .expense-form-actions {display: flex; flex-wrap: wrap; gap: 8px;}
 .form-error {color: var(--red); font-size: .9rem;}
 .expense-item-meta {overflow-wrap: anywhere;}
+.group-toolbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 14px #193b2b08;
+}
+.group-picker {margin-bottom: 0;}
+.group-picker label {font-size: 14px;}
+.group-picker select {
+  min-height: 46px;
+  padding-right: 32px;
+  appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23173f35' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 10px center / 16px no-repeat;
+  color: var(--green);
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+.group-action-toggle {min-height: 46px; display: flex; align-items: center; cursor: pointer; list-style: none;}
+.group-action-toggle::-webkit-details-marker {display: none;}
+.group-actions[open] .group-action-toggle {box-shadow: inset 0 0 0 1px #90ac9e;}
+.group-actions > .group-menu {
+  position: absolute;
+  z-index: 11;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(100%, 360px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px #193b2b20;
+}
 [hidden] {display: none !important;}
 </style>
 </head>
@@ -305,25 +343,30 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <input id="importDataFile" type="file" accept="application/json,.json" hidden>
   </details>
 </section>
-<details class="group-switcher" id="groupSwitcher">
-  <summary><span>Skupina</span><strong id="activeGroupLabel"></strong></summary>
-  <div class="group-menu">
-    <div class="field"><label for="groupSelect">Přepnout skupinu</label><select id="groupSelect"></select></div>
-    <div class="row">
-      <button class="primary" id="shareGroup" type="button">Sdílet skupinu</button>
-      <button class="secondary" id="addGroup" type="button">Nová skupina</button>
-    </div>
-    <details class="group-options">
-      <summary>Správa skupiny</summary>
-      <div class="compact-actions">
-        <button class="secondary" id="renameGroup" type="button">Přejmenovat</button>
-        <button class="danger" id="deleteGroup" type="button">Smazat skupinu</button>
-      </div>
-    </details>
-    <p class="muted" id="syncStatus" role="status">Skupina je uložená v tomto prohlížeči.</p>
-    <button type="button" id="refreshSharedGroup" class="secondary" hidden>Načíst online změny</button>
+<div class="group-toolbar app-content-hidden">
+  <div class="field group-picker">
+    <label for="groupSelect">Skupina</label>
+    <select id="groupSelect"></select>
   </div>
-</details>
+  <details class="group-actions" id="groupSwitcher">
+    <summary class="secondary group-action-toggle" aria-label="Akce skupiny">Akce</summary>
+    <div class="group-menu">
+      <div class="row">
+        <button class="primary" id="shareGroup" type="button">Sdílet skupinu</button>
+        <button class="secondary" id="addGroup" type="button">Nová skupina</button>
+      </div>
+      <details class="group-options">
+        <summary>Správa skupiny</summary>
+        <div class="compact-actions">
+          <button class="secondary" id="renameGroup" type="button">Přejmenovat</button>
+          <button class="danger" id="deleteGroup" type="button">Smazat skupinu</button>
+        </div>
+      </details>
+      <p class="muted" id="syncStatus" role="status">Skupina je uložená v tomto prohlížeči.</p>
+      <button type="button" id="refreshSharedGroup" class="secondary" hidden>Načíst online změny</button>
+    </div>
+  </details>
+</div>
 <div class="tabs" role="group" aria-label="Záložky skupiny">
   <button class="tab active" type="button" data-tab="overview" aria-controls="overview" aria-pressed="true">Přehled</button>
   <button class="tab" type="button" data-tab="expenses" aria-controls="expenses" aria-pressed="false">Výdaje</button>
@@ -331,8 +374,8 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 </div>
 <section id="overview" class="panel">
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
-<div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
 <div class="card overview-notes"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">Přidat poznámku</button></form></div>
+<div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
 <div class="overview-actions">
   <details class="delete-disclosure">
     <summary>Export přehledu</summary>
@@ -358,7 +401,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.0.0</span>
+  <span>Verze 1.0.1</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true">+</span></button>
 </main>
@@ -512,7 +555,7 @@ function render(){
  if(!database.groups.some(g=>g.id===activeGroupId)){activeGroupId=database.groups[0].id}
  state=database.groups.find(g=>g.id===activeGroupId)||database.groups[0];
  localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
- const groupSelect=document.getElementById('groupSelect');groupSelect.innerHTML=database.groups.map(g=>'<option value="'+esc(g.id)+'"'+(g.id===activeGroupId?' selected':'')+'>'+esc(g.name)+'</option>').join('');document.getElementById('activeGroupLabel').textContent='— '+state.name;if(!Array.isArray(state.notes))state.notes=typeof state.notes==='string'?(state.notes.trim()?[{id:crypto.randomUUID(),text:state.notes.trim(),createdAt:new Date().toISOString()}]:[]):[];const notesList=document.getElementById('groupNotesList');if(notesList)notesList.innerHTML=state.notes.length?state.notes.map(note=>'<div class="item"><div style="white-space:pre-wrap;overflow-wrap:anywhere;flex:1">'+esc(note.text)+'</div><button class="danger" type="button" data-delete-note="'+esc(note.id)+'">Smazat</button></div>').join(''):'<div class="empty">Zatím tu nejsou žádné poznámky.</div>';document.getElementById('total').textContent=money(state.expenses.reduce((sum,expense)=>sum+(Number(expense.amount)||0),0));document.getElementById('count').textContent=state.expenses.length;document.getElementById('peopleCount').textContent=state.people.length;
+ const groupSelect=document.getElementById('groupSelect');groupSelect.innerHTML=database.groups.map(g=>'<option value="'+esc(g.id)+'"'+(g.id===activeGroupId?' selected':'')+'>'+esc(g.name)+'</option>').join('');if(!Array.isArray(state.notes))state.notes=typeof state.notes==='string'?(state.notes.trim()?[{id:crypto.randomUUID(),text:state.notes.trim(),createdAt:new Date().toISOString()}]:[]):[];const notesList=document.getElementById('groupNotesList');if(notesList)notesList.innerHTML=state.notes.length?state.notes.map(note=>'<div class="item"><div style="white-space:pre-wrap;overflow-wrap:anywhere;flex:1">'+esc(note.text)+'</div><button class="danger" type="button" data-delete-note="'+esc(note.id)+'">Smazat</button></div>').join(''):'<div class="empty">Zatím tu nejsou žádné poznámky.</div>';document.getElementById('total').textContent=money(state.expenses.reduce((sum,expense)=>sum+(Number(expense.amount)||0),0));document.getElementById('count').textContent=state.expenses.length;document.getElementById('peopleCount').textContent=state.people.length;
 const b=balances();document.getElementById('balances').innerHTML=state.people.length?sortedPeople().map(p=>'<div class="item"><span>'+esc(p.name)+'</span><strong class="amount '+(b[p.id]>0.005?'positive':b[p.id]<-.005?'negative':'')+'">'+(b[p.id]>0.005?'+':'')+money(b[p.id]||0)+'</strong></div>').join(''):'<div class="empty">Nejdřív přidej členy skupiny.</div>';
 const s=settlements();document.getElementById('settlements').innerHTML=s.length?s.map(x=>'<div class="item"><div><div class="item-title">'+esc(x.from)+' <span class="muted">→</span> '+esc(x.to)+'</div><div class="muted">Doporučené vyrovnání</div></div><strong class="amount">'+money(x.amount)+'</strong></div>').join(''):'<div class="empty">'+(state.people.length>1?'Zatím není co vyrovnávat.':'Přidej alespoň dva členy a zadej výdaje.')+'</div>';
 const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(expenseMarkup).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
@@ -596,6 +639,16 @@ function activateGroup(id){
  document.getElementById('groupSwitcher').open=false;document.querySelector('.group-options').open=false;document.querySelector('[data-tab="overview"]').click()
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
+const groupActions=document.getElementById('groupSwitcher');
+document.addEventListener('click',event=>{
+ if(groupActions.open&&!groupActions.contains(event.target))groupActions.open=false;
+});
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Escape'||!groupActions.open||!groupActions.contains(document.activeElement))return;
+ groupActions.open=false;
+ groupActions.querySelector('summary').focus();
+});
+
 document.getElementById('groupNoteForm').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('groupNoteInput');const value=input.value.trim();if(!value)return;if(!Array.isArray(state.notes))state.notes=[];state.notes.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});input.value='';save()});
 document.getElementById('groupNotesList').addEventListener('click',e=>{const button=e.target.closest('[data-delete-note]');if(!button)return;state.notes=(Array.isArray(state.notes)?state.notes:[]).filter(note=>note.id!==button.dataset.deleteNote);save()});
 document.getElementById('deleteGroup').addEventListener('click',async()=>{
@@ -809,7 +862,7 @@ state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();updatePage
 if(remoteToken)setSyncStatus('Skupina je sdílená online.');
 
 const welcome=document.getElementById('welcome');
-const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense,main.wrap #backHome')];
+const appNodes=[...document.querySelectorAll('main.wrap>.group-toolbar,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense,main.wrap #backHome')];
 const inviteDialog=document.getElementById('inviteDialog');
 const joinDialog=document.getElementById('joinDialog');
 const joinCode=document.getElementById('joinCode');
