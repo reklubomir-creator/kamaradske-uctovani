@@ -8,7 +8,7 @@ function json(value, status = 200) {
   return Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-async function boundedJson(request) {
+async function boundedJson(request, limit = 8192) {
   if (!request.body) throw new Error("Body missing");
   const reader = request.body.getReader();
   const decoder = new TextDecoder();
@@ -18,7 +18,7 @@ async function boundedJson(request) {
     const next = await reader.read();
     if (next.done) return JSON.parse(raw + decoder.decode());
     bytes += next.value.length;
-    if (bytes > 8192) {
+    if (bytes > limit) {
       await reader.cancel();
       throw new Error("Body too large");
     }
@@ -157,6 +157,34 @@ export class PushStore {
       return json(key);
     }
     const data = await request.json();
+    if (path === "/merge") {
+      const current = await readGroup(data.token);
+      if (!current) return json({error: "Group not found"}, 404);
+      if (!Array.isArray(data.changes)) return json({error: "Invalid changes"}, 400);
+      const changed = structuredClone(current);
+      for (const change of data.changes) {
+        if (change.field === "name") {
+          if (changed.name !== change.before && changed.name !== change.after) return json({error: "Conflict"}, 409);
+          changed.name = change.after;
+          continue;
+        }
+        if (!["people","expenses","notes"].includes(change.field) || typeof change.id !== "string") return json({error: "Invalid change"}, 400);
+        const records = changed[change.field] ||= [];
+        const index = records.findIndex(item => item.id === change.id);
+        const prior = records[index] ?? null;
+        if (JSON.stringify(prior) === JSON.stringify(change.after)) continue;
+        if (JSON.stringify(prior) !== JSON.stringify(change.before)) return json({error: "Conflict"}, 409);
+        if (change.after === null) records.splice(index,1);
+        else if (change.after.id !== change.id) return json({error: "Invalid record"},400);
+        else if (index < 0) records.push(change.after);
+        else records[index] = change.after;
+      }
+      if (JSON.stringify(current) !== JSON.stringify(changed)) {
+        const saved = await fetch(GROUPS_API, {method:"POST", body:new URLSearchParams({token:data.token,data:JSON.stringify(changed)}),signal:AbortSignal.timeout(15000)});
+        if (!saved.ok || JSON.stringify(await readGroup(data.token)) !== JSON.stringify(changed)) return json({error:"Write unconfirmed"},503);
+      }
+      return json({ok:true});
+    }
     if (path === "/test-status") {
       return json(await this.storage.get("result:sub:" + await digest(data.endpoint)) || {state: "unknown"});
     }
@@ -227,9 +255,9 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     try {
       if (path === "/config" && request.method === "GET") return reply({ publicKey: (await getKey(env)).publicKey });
-      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/test-status", "/sync"].includes(path)) return reply({ error: "Not found" }, 404);
+      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/test-status", "/sync", "/merge"].includes(path)) return reply({ error: "Not found" }, 404);
       let data;
-      try { data = await boundedJson(request); }
+      try { data = await boundedJson(request, path === "/merge" ? 1024 * 1024 : 8192); }
       catch { return reply({ error: "Invalid body" }, 400); }
       if (!data || typeof data.token !== "string" || !/^[A-Za-z0-9_-]{20,128}$/.test(data.token)) return reply({ error: "Invalid group" }, 400);
       if (path === "/subscribe" && (
