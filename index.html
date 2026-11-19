@@ -236,6 +236,26 @@ main.wrap{width:100%;overflow-x:clip}
 #pdfReport .report-footer{margin-top:22px;color:#697a74;font-size:12px;border-top:1px solid #dce5df;padding-top:8px}
 @media(max-width:600px){#pdfReport{padding:12px}#pdfReport .report-columns{grid-template-columns:minmax(0,1fr)}#pdfReport .report-stats{gap:6px}#pdfReport .report-stat{padding:8px}#pdfReport .report-stat strong{font-size:15px}#pdfReport .report-chart-row{grid-template-columns:76px minmax(0,1fr) 68px;gap:5px}}
 
+#quickExpense {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px #173f3540;
+}
+#quickExpense span {font-size: 34px; font-weight: 500; line-height: 1;}
+#quickExpense:focus-visible {outline: 3px solid #41916d; outline-offset: 3px;}
+main.wrap:has(#quickExpense:not(.app-content-hidden)) {
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+@media print {#quickExpense {display: none;}}
+
 </style>
 </head>
 <body>
@@ -269,11 +289,15 @@ main.wrap{width:100%;overflow-x:clip}
 </div>
 </section>
 <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
-<section id="expenses" class="panel hidden"><div class="grid"><div class="card"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2>Nový výdaj</h2><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Za koho se výdaj počítá? Zaškrtni účastníky a případně uprav jejich podíl pro tuto platbu.</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><button class="primary full" type="submit">Uložit výdaj</button></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
+<section id="expenses" class="panel hidden"><div class="grid"><div class="card"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2>Nový výdaj</h2><div id="expenseNeedsMember" class="field hidden">
+  <p class="muted">Pro uložení výdaje přidej alespoň jednoho člena skupiny.</p>
+  <button id="expenseAddMember" class="secondary" type="button">Přidat člena</button>
+</div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Za koho se výdaj počítá? Zaškrtni účastníky a případně uprav jejich podíl pro tuto platbu.</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><button class="primary full" type="submit">Uložit výdaj</button></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer"><a href="./" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.11.19-54</span></div>
+<div class="footer"><a href="./" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.11.19-55</span></div>
+<button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true">+</span></button>
 </main>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
   <h2 id="inviteTitle">Sdílet skupinu</h2>
@@ -404,8 +428,18 @@ const s=settlements();document.getElementById('settlements').innerHTML=s.length?
 const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(e=>expenseMarkup(e)).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
 document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+p.id+'"><button class="danger" data-remove-person="'+p.id+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
 document.getElementById('payer').innerHTML=sortedPeople().map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+p.id+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+p.id+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
+ document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
 }
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',p.id!==btn.dataset.tab))}));
+document.getElementById('quickExpense').addEventListener('click',()=>{
+ document.querySelector('[data-tab="expenses"]').click();
+ document.getElementById('description').focus({preventScroll:true});
+ document.getElementById('expenses').scrollIntoView({block:'start'});
+});
+document.getElementById('expenseAddMember').addEventListener('click',()=>{
+ document.querySelector('[data-tab="people"]').click();
+ document.getElementById('personName').focus();
+});
 function activateGroup(id){
  const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;
  activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);
@@ -556,7 +590,7 @@ document.getElementById('date').value=today();
 state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();updatePageTitle();
 
 const welcome=document.getElementById('welcome');
-const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport')];
+const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense')];
 const inviteDialog=document.getElementById('inviteDialog');
 const joinDialog=document.getElementById('joinDialog');
 const joinCode=document.getElementById('joinCode');
