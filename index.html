@@ -264,11 +264,10 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 .welcome-card {max-width: 560px;}
 .welcome-intro {margin: 0 auto 24px;}
 .welcome-backups {margin: 20px auto 0; max-width: 440px; border-top: 1px solid var(--line); padding-top: 14px;}
-.welcome-backups summary, .group-options > summary {cursor: pointer; color: var(--green); font-weight: 650;}
+.welcome-backups summary {cursor: pointer; color: var(--green); font-weight: 650;}
 .compact-actions {display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
-.group-menu .group-options {margin-top: 12px;}
-.group-options > summary {display: list-item; padding: 4px 0; min-height: 0;}
-.group-options > summary::after {content: none;}
+.group-options {margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);}
+.group-options h2 {margin: 0; color: var(--green); font-size: .875rem; font-weight: 700;}
 .group-options .danger, .expense-form-actions .danger {min-height: 44px;}
 .overview-notes {margin-bottom: 16px;}
 .overview-actions .compact-actions {padding: 0 12px 12px;}
@@ -349,19 +348,19 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <select id="groupSelect"></select>
   </div>
   <details class="group-actions" id="groupSwitcher">
-    <summary class="secondary group-action-toggle" aria-label="Akce skupiny">Akce</summary>
+    <summary class="secondary group-action-toggle" aria-label="Menu skupiny">Menu</summary>
     <div class="group-menu">
       <div class="row">
         <button class="primary" id="shareGroup" type="button">Sdílet skupinu</button>
         <button class="secondary" id="addGroup" type="button">Nová skupina</button>
       </div>
-      <details class="group-options">
-        <summary>Správa skupiny</summary>
+      <section class="group-options" aria-labelledby="groupOptionsTitle">
+        <h2 id="groupOptionsTitle">Správa skupiny</h2>
         <div class="compact-actions">
           <button class="secondary" id="renameGroup" type="button">Přejmenovat</button>
           <button class="danger" id="deleteGroup" type="button">Smazat skupinu</button>
         </div>
-      </details>
+      </section>
       <p class="muted" id="syncStatus" role="status">Skupina je uložená v tomto prohlížeči.</p>
       <button type="button" id="refreshSharedGroup" class="secondary" hidden>Načíst online změny</button>
     </div>
@@ -401,7 +400,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.0.2</span>
+  <span>Verze 1.0.3</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true">+</span></button>
 </main>
@@ -636,7 +635,7 @@ function activateGroup(id){
  updateShareUrl();
  persistDatabase();updatePageTitle();resetExpenseForm();document.getElementById('personForm').reset();document.getElementById('groupNoteForm').reset();render();
  setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
- document.getElementById('groupSwitcher').open=false;document.querySelector('.group-options').open=false;document.querySelector('[data-tab="overview"]').click()
+ document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 const groupActions=document.getElementById('groupSwitcher');
@@ -691,7 +690,7 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   resetExpenseForm();document.getElementById('personForm').reset();
   render();updatePageTitle();
   setSyncStatus(isShared?'Skupina byla smazána i z online databáze.':'Skupina byla smazána z tohoto prohlížeče.');
-  document.getElementById('groupSwitcher').open=false;document.querySelector('.group-options').open=false;document.querySelector('[data-tab="overview"]').click();
+  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click();
   // Po smazání se vždy vrať na rozcestník; uložené skupiny zůstanou dostupné přes tlačítko Pokračovat.
   welcome.hidden=false;
   appNodes.forEach(el=>el.classList.add('app-content-hidden'));
