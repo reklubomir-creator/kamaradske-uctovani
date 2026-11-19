@@ -1,15 +1,14 @@
 <!doctype html>
-<!-- Trigger GitHub Pages deployment; no application behavior changed. -->
 <html lang="cs">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#173f35">
-<link rel="icon" type="image/svg+xml" href="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
-<link rel="apple-touch-icon" href="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
-<meta property="og:image" content="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
-<meta name="twitter:image" content="https://reklubomir-creator.github.io/kamaradske-uctovani/icon.svg">
+<link rel="icon" type="image/png" sizes="180x180" href="./app-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./app-icon.png">
+<meta property="og:image" content="https://finance.lubarek.cz/app-icon.png">
+<meta name="twitter:image" content="https://finance.lubarek.cz/app-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kamarádské účtování">
 <meta property="og:title" content="Kamarádské účtování">
@@ -257,47 +256,110 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 }
 @media print {#quickExpense {display: none;}}
 
+
+.top {padding-bottom: 40px;}
+.top-inner {display: flex; align-items: center; gap: 12px;}
+.app-mark {flex: none; border-radius: 12px; border: 1px solid #ffffff30;}
+.top h1 {margin: 0;}
+.welcome-card {max-width: 560px;}
+.welcome-intro {margin: 0 auto 24px;}
+.welcome-backups {margin: 20px auto 0; max-width: 440px; border-top: 1px solid var(--line); padding-top: 14px;}
+.welcome-backups summary, .group-options > summary {cursor: pointer; color: var(--green); font-weight: 650;}
+.compact-actions {display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;}
+.group-menu .group-options {margin-top: 12px;}
+.group-options > summary {display: list-item; padding: 4px 0; min-height: 0;}
+.group-options > summary::after {content: none;}
+.group-options .danger, .expense-form-actions .danger {min-height: 44px;}
+.overview-notes {margin-top: 16px;}
+.overview-actions .compact-actions {padding: 0 12px 12px;}
+.overview-actions {display: grid; gap: 8px;}
+.footer {display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px;}
+.footer a {color: var(--green); font-weight: 650; padding: 8px 0;}
+.expense-item {display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start;}
+.expense-item .item-title {overflow-wrap: anywhere;}
+.expense-item-actions {display: grid; justify-items: end; gap: 6px;}
+.expense-item-actions button {min-height: 44px; padding: 7px 12px;}
+.expense-form-actions {display: flex; flex-wrap: wrap; gap: 8px;}
+.form-error {color: var(--red); font-size: .9rem;}
+.expense-item-meta {overflow-wrap: anywhere;}
+[hidden] {display: none !important;}
 </style>
 </head>
 <body>
-<header class="top"><div class="top-inner"><h1>Kamarádské účtování</h1><p>Jednoduše zjisti, kdo platil, kdo kolik dluží a jak to vyrovnat.</p></div></header>
-<main class="wrap"><section id="welcome" class="card welcome-card"><div class="welcome-mark">↔</div><h2>Rozúčtujte společné výdaje bez zbytečných aplikací</h2><p class="welcome-intro">Kamarádské účtování vám pomůže přehledně evidovat společné výdaje, sledovat, kdo kolik zaplatil, a spočítat, kdo komu má peníze vrátit. Skupinu můžete používat sami nebo ji sdílet s ostatními odkazem nebo kódem. Skupiny si můžete také zálohovat do souboru a později je obnovit importem zálohy, například při přechodu mezi prohlížečem a aplikací na ploše.</p>
-<div style="max-width:600px;margin:0 auto 24px;text-align:left;background:#f8faf8;border:1px solid var(--line);border-radius:14px;padding:16px 18px">
-<h3 style="font-size:16px;margin:0 0 8px">Jak to funguje?</h3>
-<ul style="margin:0;padding-left:20px;line-height:1.65">
-<li><strong>Přidej členy</strong> a u každého nastav výchozí podíl, pokud se nemají všechny výdaje dělit stejně.</li>
-<li><strong>Zapiš výdaj</strong> – částku, kdo ji zaplatil a kdo se na ní podílí.</li>
-<li><strong>Rozděl výdaj podle podílů:</strong> 1 díl znamená běžný podíl. Když má někdo 2 díly a druhý 1 díl, výdaj 900 Kč se rozdělí na 600 Kč a 300 Kč.</li>
-<li><strong>Podíly lze upravit u každého výdaje zvlášť.</strong> Například při společném nákupu může někdo platit jen polovinu nebo se výdaj nemusí týkat všech členů.</li>
-<li><strong>Aplikace vše sečte</strong> a ukáže, kdo komu kolik dluží, aby se výdaje mohly jednoduše vyrovnat.</li>
-</ul>
+<header class="top"><div class="top-inner"><img class="app-mark" src="./app-icon.png" alt="" width="48" height="48"><h1>Kamarádské účtování</h1></div></header>
+<main class="wrap">
+<section id="welcome" class="card welcome-card" aria-labelledby="welcomeTitle">
+  <h2 id="welcomeTitle">Společné výdaje na jednom místě</h2>
+  <p class="welcome-intro">Zapisuj, kdo platil, a zjisti, jak se mezi sebou vyrovnat.</p>
+  <div class="welcome-actions">
+    <button class="primary" id="continueWelcome" type="button" hidden>Pokračovat do skupin</button>
+    <button class="primary" id="createLocalWelcome" type="button">Založit skupinu</button>
+    <button class="secondary" type="button" data-join-group>Zadat kód skupiny</button>
+  </div>
+  <details class="welcome-backups">
+    <summary>Záloha skupin</summary>
+    <div class="compact-actions">
+      <button class="secondary" id="exportDataWelcome" type="button">Exportovat zálohu</button>
+      <button class="secondary" id="importDataWelcome" type="button">Načíst zálohu</button>
+    </div>
+    <input id="importDataFile" type="file" accept="application/json,.json" hidden>
+  </details>
+</section>
+<details class="group-switcher" id="groupSwitcher">
+  <summary><span>Skupina</span><strong id="activeGroupLabel"></strong></summary>
+  <div class="group-menu">
+    <div class="field"><label for="groupSelect">Přepnout skupinu</label><select id="groupSelect"></select></div>
+    <div class="row">
+      <button class="primary" id="shareGroup" type="button">Sdílet skupinu</button>
+      <button class="secondary" id="addGroup" type="button">Nová skupina</button>
+    </div>
+    <details class="group-options">
+      <summary>Správa skupiny</summary>
+      <div class="compact-actions">
+        <button class="secondary" id="renameGroup" type="button">Přejmenovat</button>
+        <button class="danger" id="deleteGroup" type="button">Smazat skupinu</button>
+      </div>
+    </details>
+    <p class="muted" id="syncStatus" role="status">Skupina je uložená v tomto prohlížeči.</p>
+    <button type="button" id="refreshSharedGroup" class="secondary" hidden>Načíst online změny</button>
+  </div>
+</details>
+<div class="tabs" role="group" aria-label="Záložky skupiny">
+  <button class="tab active" type="button" data-tab="overview" aria-controls="overview" aria-pressed="true">Přehled</button>
+  <button class="tab" type="button" data-tab="expenses" aria-controls="expenses" aria-pressed="false">Výdaje</button>
+  <button class="tab" type="button" data-tab="people" aria-controls="people" aria-pressed="false">Členové</button>
 </div>
-<div style="max-width:600px;margin:0 auto 22px;text-align:left;line-height:1.65">
-<h3 style="font-size:16px;margin:0 0 8px">Proč jsem vytvořil vlastní aplikaci?</h3>
-<p style="margin:0 0 10px">Podobných aplikací už existuje spousta. Chtěl jsem si ale vytvořit vlastní řešení, které bude jednoduché, přehledné a bude fungovat přesně tak, jak potřebuji já a moji kamarádi. Bez zbytečných složitostí, s možností přizpůsobit si dělení výdajů a podílů podle konkrétní situace.</p>
-<p style="margin:0;color:var(--muted);font-size:14px;text-align:right"><strong>Autor: Lubomír Rek ml.</strong></p>
-</div>
-<div class="welcome-actions"><button class="primary" id="createOnlineWelcome" type="button">🌐 Založit sdílenou online skupinu</button><button class="secondary" type="button" data-join-group>Zadat kód skupiny</button><button class="secondary" id="createLocalWelcome" type="button">📱 Založit místní skupinu</button><button class="secondary" id="continueWelcome" type="button" hidden>Pokračovat do uložených skupin</button><button class="secondary" id="exportDataWelcome" type="button">⬇️ Exportovat zálohu skupin</button><button class="secondary" id="importDataWelcome" type="button">⬆️ Importovat zálohu skupin</button><input id="importDataFile" type="file" accept="application/json,.json" hidden></div><p class="muted welcome-note">Online skupina se synchronizuje mezi zařízeními všech účastníků. Místní skupina zůstává uložená jen v tomto prohlížeči.</p></section>
-<details class="group-switcher" id="groupSwitcher"><summary><span>Aktuální skupina</span><strong id="activeGroupLabel"></strong></summary><div class="group-menu"><div class="field"><label for="groupSelect">Vybrat skupinu</label><select id="groupSelect" aria-label="Vybrat skupinu"></select></div><div class="row"><button class="secondary" id="renameGroup" type="button">Přejmenovat skupinu</button><button class="primary" id="addGroup" type="button">+ Přidat novou</button></div><div class="row" style="margin-top:10px"><button class="primary" id="shareGroup" type="button">Sdílet skupinu</button><button class="secondary" type="button" data-join-group>Zadat kód skupiny</button></div><div style="margin-top:10px"><button class="danger" id="deleteGroup" type="button">🗑️ Smazat skupinu</button></div><p class="muted" id="syncStatus" style="margin:10px 0 0">Data se zatím ukládají v tomto prohlížeči. Skupinu můžeš zpřístupnit ostatním odkazem nebo kódem.</p></div></details><div class="tabs" role="tablist"><button class="tab active" data-tab="overview">Přehled</button><button class="tab" data-tab="expenses">Výdaje</button><button class="tab" data-tab="people">Členové</button></div>
 <section id="overview" class="panel">
-<div class="card" style="margin-bottom:16px"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">+ Přidat poznámku</button></form><p class="muted" style="margin:8px 0 0">Poznámky zůstávají uložené i po smazání výdajů a sdílí se s ostatními členy skupiny.</p></div>
 <div class="stats"><div class="stat"><small>Celkové výdaje</small><strong id="total">0 Kč</strong></div><div class="stat"><small>Počet výdajů</small><strong id="count">0</strong></div><div class="stat"><small>Členové skupiny</small><strong id="peopleCount">0</strong></div></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
+<div class="card overview-notes"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">Přidat poznámku</button></form></div>
 <div class="overview-actions">
-  <div class="export-buttons"><button class="primary" id="exportPdf" type="button">↓ Exportovat přehled do PDF</button><button class="secondary" id="exportImage" type="button">▧ Exportovat přehled jako obrázek (PNG)</button></div>
-  <p class="muted">PDF otevře tiskový dialog, kde vybereš „Uložit jako PDF“. Obrázek se stáhne jako PNG.</p>
-  <details class="delete-disclosure"><summary>🗑️ Mazání dat</summary><div class="delete-disclosure-content"><div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div></div></details>
+  <details class="delete-disclosure">
+    <summary>Export přehledu</summary>
+    <div class="compact-actions">
+      <button class="secondary" id="exportPdf" type="button">PDF / tisk</button>
+      <button class="secondary" id="exportImage" type="button">Obrázek PNG</button>
+    </div>
+  </details>
+  <details class="delete-disclosure"><summary>Mazání dat</summary><div class="delete-disclosure-content"><div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div></div></details>
 </div>
 </section>
 <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
-<section id="expenses" class="panel hidden"><div class="grid"><div class="card"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2>Nový výdaj</h2><div id="expenseNeedsMember" class="field hidden">
+<section id="expenses" class="panel hidden"><div class="grid"><div class="card" id="expenseEditor"><div id="expenseSuccess" class="success-message" role="status" aria-live="polite"></div><h2 id="expenseFormTitle">Nový výdaj</h2><div id="expenseNeedsMember" class="field hidden">
   <p class="muted">Pro uložení výdaje přidej alespoň jednoho člena skupiny.</p>
   <button id="expenseAddMember" class="secondary" type="button">Přidat člena</button>
-</div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Za koho se výdaj počítá? Zaškrtni účastníky a případně uprav jejich podíl pro tuto platbu.</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><button class="primary full" type="submit">Uložit výdaj</button></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
+</div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
+<div class="expense-form-actions">
+  <button class="primary full" id="saveExpense" type="submit">Uložit výdaj</button>
+  <button class="secondary" id="cancelExpenseEdit" type="button" hidden>Zrušit úpravy</button>
+  <button class="danger" id="deleteEditedExpense" type="button" hidden>Smazat výdaj</button>
+</div></form></div><div class="card"><h2>Všechny výdaje</h2><div id="allExpenses" class="list"></div></div></div></section>
 
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
-<div class="notice"><strong>Sdílení skupiny:</strong> po vytvoření sdílecího odkazu se členové skupiny mohou připojit z jiného zařízení. Každý, kdo má odkaz, může zobrazit i upravovat data této skupiny.</div>
-<div class="footer"><a href="./" style="color:var(--green);font-weight:700;text-decoration:underline">← Zpět na rozcestník</a><button type="button" id="refreshAppFooter" class="secondary" style="margin-left:10px;padding:7px 12px">🔄 Obnovit</button><br><span style="display:inline-block;margin-top:8px">Kamarádské účtování · prototyp</span><br><span style="display:inline-block;margin-top:5px;padding:3px 8px;border:1px solid #d6e0da;border-radius:999px;background:#fff">Verze nasazení: 2026.11.19-56</span></div>
+<footer class="footer">
+  <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
+  <span>Verze nasazení: 2026.11.19-57</span>
+</footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true">+</span></button>
 </main>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
@@ -332,7 +394,7 @@ if(database&&Array.isArray(database.groups)&&database.groups.length){
   if(!database.groups.some(g=>g.id===activeGroupId))activeGroupId=database.groups[0].id;
 }else{
   const legacy=database&&Array.isArray(database.people)&&Array.isArray(database.expenses)?database:{people:[],expenses:[]};
-  const first={id:crypto.randomUUID(),name:'Moje skupina',people:legacy.people,expenses:legacy.expenses};
+  const first={id:crypto.randomUUID(),name:'Moje skupina',people:legacy.people,expenses:legacy.expenses,placeholder:!legacy.people.length&&!legacy.expenses.length};
   database={groups:[first],activeGroupId:first.id};activeGroupId=first.id;
   try{localStorage.setItem(KEY,JSON.stringify(database))}catch{}
 }
@@ -370,7 +432,7 @@ const REMOTE_KEY='kamaradske-uctovani-remote-v1';
 let remoteTokens={};
 try{remoteTokens=JSON.parse(localStorage.getItem(REMOTE_KEY))||{}}catch{remoteTokens={}}
 let remoteToken=remoteTokens[activeGroupId]||'';
-let remoteSaving=false;
+const remoteWrites=new Map();
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function rememberRemoteToken(groupId,token){remoteTokens[groupId]=token;localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));if(groupId===activeGroupId)remoteToken=token}
 function jsonp(params){
@@ -406,36 +468,119 @@ function postRemote(token,data){
   document.body.append(iframe,form);
  });
 }
-async function syncRemote(){
- if(!remoteToken||remoteSaving)return;
- remoteSaving=true;setSyncStatus('Ukládám změny online…');
- try{await postRemote(remoteToken,{name:state.name,people:state.people,expenses:state.expenses,notes:state.notes||''});setSyncStatus('Skupina je synchronizovaná online.')}
- catch(err){setSyncStatus('Změny jsou uložené v tomto prohlížeči, ale online uložení se nepodařilo: '+err.message)}
- finally{remoteSaving=false}
+function syncRemote(token=remoteToken,group=state){
+ if(!token)return;
+ const data=JSON.parse(JSON.stringify({name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]}));
+ const queue=remoteWrites.get(token);
+ if(queue){queue.next=data;return}
+ const pending={next:data};
+ remoteWrites.set(token,pending);
+ void writeRemoteQueue(token,pending);
+}
+async function writeRemoteQueue(token,pending){
+ try{
+  while(pending.next){
+   const data=pending.next;
+   pending.next=null;
+   if(token===remoteToken)setSyncStatus('Ukládám změny online…');
+   try{
+    await postRemote(token,data);
+    if(token===remoteToken&&!pending.next)setSyncStatus('Skupina je synchronizovaná online.');
+   }catch(error){
+    if(token===remoteToken&&!pending.next)setSyncStatus('Změny jsou uložené v prohlížeči. Online uložení se nepodařilo: '+error.message);
+   }
+  }
+ }finally{remoteWrites.delete(token)}
 }
 const save=()=>{const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;persistDatabase();render();if(remoteToken)syncRemote()};
 function sortedPeople(){return [...state.people].sort((a,b)=>a.name.localeCompare(b.name,'cs',{sensitivity:'base'}))} function balances(){const b=Object.fromEntries(state.people.map(p=>[p.id,0]));for(const e of state.expenses){if(!(e.payer in b))continue;b[e.payer]+=Number(e.amount)||0;const ids=(e.participants||[]).filter(id=>id in b);if(!ids.length)continue;const weights=ids.map(id=>{const legacy=!e.shares;const n=legacy?1:Number(e.shares[id]);return Number.isFinite(n)&&n>0?n:0});const total=weights.reduce((s,n)=>s+n,0);if(total>0)ids.forEach((id,i)=>b[id]-=(Number(e.amount)||0)*weights[i]/total)}return b}
 function settlements(){const b=balances(),debtors=state.people.map(p=>({id:p.id,name:p.name,n:-(b[p.id]||0)})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),creditors=state.people.map(p=>({id:p.id,name:p.name,n:b[p.id]||0})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),out=[];let i=0,j=0;while(i<debtors.length&&j<creditors.length){let n=Math.min(debtors[i].n,creditors[j].n);out.push({from:debtors[i].name,to:creditors[j].name,amount:n});debtors[i].n-=n;creditors[j].n-=n;if(debtors[i].n<.01)i++;if(creditors[j].n<.01)j++}return out}
-function expenseMarkup(e,remove=true){const p=state.people.find(p=>p.id===e.payer);const ids=(e.participants||[]).filter(id=>state.people.some(person=>person.id===id));const parts=ids.map(id=>{const person=state.people.find(person=>person.id===id);const raw=e.shares?Number(e.shares[id]):1;return {id,name:person?.name||'Neznámý člen',weight:Number.isFinite(raw)&&raw>0?raw:0}});const total=parts.reduce((sum,x)=>sum+x.weight,0);const breakdown=parts.length&&total>0?'<details style="margin-top:8px"><summary class="expense-breakdown-toggle" style="cursor:pointer;color:var(--green);font-size:13px;font-weight:700">Zobrazit podíly</summary><div class="list" style="margin-top:6px">'+parts.map(x=>'<div class="item" style="padding:7px 0"><span>'+esc(x.name)+' <span class="muted">· podíl '+String(x.weight).replace('.',',')+'</span></span><strong class="amount">'+money((Number(e.amount)||0)*x.weight/total)+'</strong></div>').join('')+'</div></details>':'';return '<div class="item" style="align-items:flex-start"><div style="min-width:0;flex:1"><div class="item-title">'+esc(e.description)+'</div><div class="muted">'+esc(p?.name||'Neznámý člen')+' · '+esc(e.date)+' · '+e.participants.length+' '+(e.participants.length===1?'osoba':'osoby')+'</div>'+breakdown+'</div><div style="display:flex;align-items:center;gap:10px"><span class="amount">'+money(e.amount)+'</span>'+(remove?'<button class="danger" data-remove-expense="'+e.id+'" aria-label="Smazat výdaj">Smazat</button>':'')+'</div></div>'}
+function expenseMarkup(expense){
+ const e=expense;
+ const p=state.people.find(p=>p.id===e.payer);const ids=(e.participants||[]).filter(id=>state.people.some(person=>person.id===id));const parts=ids.map(id=>{const person=state.people.find(person=>person.id===id);const raw=e.shares?Number(e.shares[id]):1;return {id,name:person?.name||'Neznámý člen',weight:Number.isFinite(raw)&&raw>0?raw:0}});const total=parts.reduce((sum,x)=>sum+x.weight,0);const breakdown=parts.length&&total>0?'<details style="margin-top:8px"><summary class="expense-breakdown-toggle" style="cursor:pointer;color:var(--green);font-size:13px;font-weight:700">Zobrazit podíly</summary><div class="list" style="margin-top:6px">'+parts.map(x=>'<div class="item" style="padding:7px 0"><span>'+esc(x.name)+' <span class="muted">· podíl '+String(x.weight).replace('.',',')+'</span></span><strong class="amount">'+money((Number(e.amount)||0)*x.weight/total)+'</strong></div>').join('')+'</div></details>':'';
+ const count=ids.length;
+ const participantLabel=new Intl.PluralRules('cs').select(count);
+ const date=String(e.date||'').split('-').reverse().join('. ');
+ return '<article class="item expense-item"><div><div class="item-title">'+esc(e.description)+'</div>'+
+  '<div class="muted expense-item-meta">'+esc(p?.name||'Neznámý člen')+' · '+esc(date)+' · '+count+' '+({one:'osoba',few:'osoby'}[participantLabel]||'osob')+'</div>'+breakdown+'</div>'+
+  '<div class="expense-item-actions"><span class="amount">'+money(e.amount)+'</span><button type="button" class="secondary" data-edit-expense="'+esc(e.id)+'" aria-label="'+esc('Upravit výdaj '+e.description)+'">Upravit</button></div></article>';
+}
+
 function render(){
  // Zachováme všechny skupiny. Automatické slučování podle sdílecího tokenu mohlo
  // omylem odstranit vybranou skupinu a přepnout ji na jinou skupinu se stejným tokenem.
  if(!database.groups.some(g=>g.id===activeGroupId)){activeGroupId=database.groups[0].id}
  state=database.groups.find(g=>g.id===activeGroupId)||database.groups[0];
  localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
- const groupSelect=document.getElementById('groupSelect');groupSelect.innerHTML=database.groups.map(g=>'<option value="'+g.id+'"'+(g.id===activeGroupId?' selected':'')+'>'+esc(g.name)+'</option>').join('');document.getElementById('activeGroupLabel').textContent='— '+state.name;if(!Array.isArray(state.notes))state.notes=typeof state.notes==='string'?(state.notes.trim()?[{id:crypto.randomUUID(),text:state.notes.trim(),createdAt:new Date().toISOString()}]:[]):[];const notesList=document.getElementById('groupNotesList');if(notesList)notesList.innerHTML=state.notes.length?state.notes.map(note=>'<div class="item"><div style="white-space:pre-wrap;overflow-wrap:anywhere;flex:1">'+esc(note.text)+'</div><button class="danger" type="button" data-delete-note="'+esc(note.id)+'">Smazat</button></div>').join(''):'<div class="empty">Zatím tu nejsou žádné poznámky.</div>';document.getElementById('total').textContent=money(state.expenses.reduce((s,e)=>s+e.amount,0));document.getElementById('count').textContent=state.expenses.length;document.getElementById('peopleCount').textContent=state.people.length;
+ const groupSelect=document.getElementById('groupSelect');groupSelect.innerHTML=database.groups.map(g=>'<option value="'+esc(g.id)+'"'+(g.id===activeGroupId?' selected':'')+'>'+esc(g.name)+'</option>').join('');document.getElementById('activeGroupLabel').textContent='— '+state.name;if(!Array.isArray(state.notes))state.notes=typeof state.notes==='string'?(state.notes.trim()?[{id:crypto.randomUUID(),text:state.notes.trim(),createdAt:new Date().toISOString()}]:[]):[];const notesList=document.getElementById('groupNotesList');if(notesList)notesList.innerHTML=state.notes.length?state.notes.map(note=>'<div class="item"><div style="white-space:pre-wrap;overflow-wrap:anywhere;flex:1">'+esc(note.text)+'</div><button class="danger" type="button" data-delete-note="'+esc(note.id)+'">Smazat</button></div>').join(''):'<div class="empty">Zatím tu nejsou žádné poznámky.</div>';document.getElementById('total').textContent=money(state.expenses.reduce((sum,expense)=>sum+(Number(expense.amount)||0),0));document.getElementById('count').textContent=state.expenses.length;document.getElementById('peopleCount').textContent=state.people.length;
 const b=balances();document.getElementById('balances').innerHTML=state.people.length?sortedPeople().map(p=>'<div class="item"><span>'+esc(p.name)+'</span><strong class="amount '+(b[p.id]>0.005?'positive':b[p.id]<-.005?'negative':'')+'">'+(b[p.id]>0.005?'+':'')+money(b[p.id]||0)+'</strong></div>').join(''):'<div class="empty">Nejdřív přidej členy skupiny.</div>';
 const s=settlements();document.getElementById('settlements').innerHTML=s.length?s.map(x=>'<div class="item"><div><div class="item-title">'+esc(x.from)+' <span class="muted">→</span> '+esc(x.to)+'</div><div class="muted">Doporučené vyrovnání</div></div><strong class="amount">'+money(x.amount)+'</strong></div>').join(''):'<div class="empty">'+(state.people.length>1?'Zatím není co vyrovnávat.':'Přidej alespoň dva členy a zadej výdaje.')+'</div>';
-const sorted=[...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(e=>expenseMarkup(e)).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
+const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(expenseMarkup).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
 document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+p.id+'"><button class="danger" data-remove-person="'+p.id+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
-document.getElementById('payer').innerHTML=sortedPeople().map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+p.id+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+p.id+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
- document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
+renderExpensePeople();
+ document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
-document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',p.id!==btn.dataset.tab))}));
-document.getElementById('quickExpense').addEventListener('click',()=>{
+const expenseForm=document.getElementById('expenseForm');
+const expenseFields=expenseForm.elements;
+const expenseError=document.getElementById('expenseError');
+const expenseSuccess=document.getElementById('expenseSuccess');
+let editedExpenseId=null;
+let expenseMessageTimer;
+function renderExpensePeople(preserveDraft=true){
+ const payer=expenseFields.payer.value;
+ const checks=new Map([...expenseForm.querySelectorAll('.person-check')].map(input=>{
+  const weight=expenseFields.namedItem('share_'+input.value);
+  return [input.value,{checked:input.checked,weight:editedExpenseId||weight.value!==weight.defaultValue?weight.value:undefined}];
+ }));
+ document.getElementById('payer').innerHTML=sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+esc(p.id)+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+esc(p.id)+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
+ document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
+
+ if(!preserveDraft)return;
+ if(state.people.some(person=>person.id===payer))expenseFields.payer.value=payer;
+ for(const input of expenseForm.querySelectorAll('.person-check')){
+  const previous=checks.get(input.value);
+  if(!previous)continue;
+  input.checked=previous.checked;
+  if(previous.weight!==undefined)expenseFields.namedItem('share_'+input.value).value=previous.weight;
+ }
+}
+function setExpenseError(message=''){
+ expenseError.textContent=message;
+ expenseError.classList.toggle('hidden',!message);
+}
+function setExpenseEditorMode(id=null){
+ editedExpenseId=id;
+ document.getElementById('expenseFormTitle').textContent=id?'Upravit výdaj':'Nový výdaj';
+ document.getElementById('saveExpense').textContent=id?'Uložit změny':'Uložit výdaj';
+ document.getElementById('cancelExpenseEdit').hidden=!id;
+ document.getElementById('deleteEditedExpense').hidden=!id;
+ setExpenseError();
+ clearTimeout(expenseMessageTimer);
+ expenseSuccess.classList.remove('show');
+}
+function resetExpenseForm(){
+ setExpenseEditorMode();
+ expenseForm.reset();
+ expenseFields.date.value=today();
+ renderExpensePeople(false);
+}
+function focusExpenseEditor(){
  document.querySelector('[data-tab="expenses"]').click();
- document.getElementById('description').focus({preventScroll:true});
- document.getElementById('expenses').scrollIntoView({block:'start'});
+ expenseFields.description.focus({preventScroll:true});
+ document.getElementById('expenseEditor').scrollIntoView({block:'start'});
+}
+const tabs=[...document.querySelectorAll('.tab')];
+tabs.forEach(button=>button.addEventListener('click',()=>{
+ for(const tab of tabs){
+  const selected=tab===button;
+  tab.classList.toggle('active',selected);
+  tab.setAttribute('aria-pressed',String(selected));
+  document.getElementById(tab.dataset.tab).classList.toggle('hidden',!selected);
+ }
+}));
+document.getElementById('quickExpense').addEventListener('click',()=>{
+ if(editedExpenseId)resetExpenseForm();
+ focusExpenseEditor();
 });
 document.getElementById('expenseAddMember').addEventListener('click',()=>{
  document.querySelector('[data-tab="people"]').click();
@@ -446,16 +591,19 @@ function activateGroup(id){
  activeGroupId=id;state=database.groups.find(g=>g.id===activeGroupId);
  remoteToken=remoteTokens[activeGroupId]||'';
  updateShareUrl();
- persistDatabase();updatePageTitle();document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();document.getElementById('expenseSuccess').classList.remove('show');render();
+ persistDatabase();updatePageTitle();resetExpenseForm();document.getElementById('personForm').reset();document.getElementById('groupNoteForm').reset();render();
  setSyncStatus(remoteToken?'Vybraná skupina je sdílená online.':'Tato skupina je zatím pouze v tomto prohlížeči.');
- document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click()
+ document.getElementById('groupSwitcher').open=false;document.querySelector('.group-options').open=false;document.querySelector('[data-tab="overview"]').click()
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 document.getElementById('groupNoteForm').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('groupNoteInput');const value=input.value.trim();if(!value)return;if(!Array.isArray(state.notes))state.notes=[];state.notes.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});input.value='';save()});
 document.getElementById('groupNotesList').addEventListener('click',e=>{const button=e.target.closest('[data-delete-note]');if(!button)return;state.notes=(Array.isArray(state.notes)?state.notes:[]).filter(note=>note.id!==button.dataset.deleteNote);save()});
 document.getElementById('deleteGroup').addEventListener('click',async()=>{
+ if(remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
+ const removedId=activeGroupId;
+ const token=remoteToken;
  const groupName=state.name;
- const isShared=Boolean(remoteToken);
+ const isShared=Boolean(token);
  const warning=isShared
   ? 'Opravdu chceš trvale smazat skupinu „'+groupName+'“? Smažou se její online data, členové i výdaje a původní sdílecí odkaz přestane fungovat. Tuto akci nelze vrátit.'
   : 'Opravdu chceš smazat skupinu „'+groupName+'“ v tomto prohlížeči? Odstraní se její členové i výdaje. Tuto akci nelze vrátit.';
@@ -464,14 +612,19 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
  try{
   if(isShared){
    setSyncStatus('Mažu sdílenou skupinu online…');
-   const result=await jsonp({action:'delete',token:remoteToken});
+   const result=await jsonp({action:'delete',token});
    if(!result||!result.ok)throw new Error(result?.error||'Online databáze skupinu nesmazala. Aktualizuj Apps Script o podporu mazání skupin a zkus to znovu.');
   }
-  const removedId=activeGroupId;
   database.groups=database.groups.filter(g=>g.id!==removedId);
   delete remoteTokens[removedId];
+  if(removedId!==activeGroupId){
+   persistDatabase();
+   render();
+   alert('Skupina „'+groupName+'“ byla smazána.');
+   return;
+  }
   if(!database.groups.length){
-   const replacement=emptyGroup('Moje skupina');
+   const replacement={...emptyGroup('Moje skupina'),placeholder:true};
    database.groups.push(replacement);
    activeGroupId=replacement.id;
   }else{
@@ -481,15 +634,15 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
   remoteToken=remoteTokens[activeGroupId]||'';
   persistDatabase();
   localStorage.setItem(REMOTE_KEY,JSON.stringify(remoteTokens));
-  const url=new URL(location.href);url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
-  document.getElementById('date').value=today();document.getElementById('expenseForm').reset();document.getElementById('personForm').reset();
+  const url=new URL(location.href);url.searchParams.delete('_activeGroup');url.searchParams.delete('group');url.searchParams.delete('nazev');history.replaceState({},'',url.href);
+  resetExpenseForm();document.getElementById('personForm').reset();
   render();updatePageTitle();
   setSyncStatus(isShared?'Skupina byla smazána i z online databáze.':'Skupina byla smazána z tohoto prohlížeče.');
-  document.getElementById('groupSwitcher').open=false;document.querySelector('[data-tab="overview"]').click();
+  document.getElementById('groupSwitcher').open=false;document.querySelector('.group-options').open=false;document.querySelector('[data-tab="overview"]').click();
   // Po smazání se vždy vrať na rozcestník; uložené skupiny zůstanou dostupné přes tlačítko Pokračovat.
   welcome.hidden=false;
   appNodes.forEach(el=>el.classList.add('app-content-hidden'));
-  document.getElementById('continueWelcome').hidden=database.groups.length===0;
+  updateWelcomeActions();
   alert('Skupina „'+groupName+'“ byla smazána.');
  }catch(err){
   setSyncStatus('Skupinu se nepodařilo smazat: '+err.message);
@@ -498,12 +651,74 @@ document.getElementById('deleteGroup').addEventListener('click',async()=>{
 });
 
 document.getElementById('renameGroup').addEventListener('click',()=>{const raw=prompt('Nový název skupiny:',state.name);if(raw===null)return;const name=raw.trim();if(!name){alert('Název skupiny nesmí být prázdný.');return}if(database.groups.some(g=>g.id!==activeGroupId&&g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}state.name=name;save();updatePageTitle();if(remoteToken)updateShareUrl();document.getElementById('groupSwitcher').open=false});
-document.getElementById('addGroup').addEventListener('click',()=>{const raw=prompt('Jak se bude nová skupina jmenovat?','Nová skupina');if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}if(database.groups.some(g=>g.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Skupina s tímto názvem už existuje.');return}const group=emptyGroup(name);const i=database.groups.findIndex(g=>g.id===activeGroupId);if(i>=0)database.groups[i]=state;database.groups.push(group);activateGroup(group.id)});
+
 document.getElementById('personForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('personName').value.trim();if(!name)return;if(state.people.some(p=>p.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){alert('Člen s tímto jménem už existuje.');return}state.people.push({id:crypto.randomUUID(),name,share:1});e.target.reset();save()});
-document.getElementById('expenseForm').addEventListener('invalid',e=>{e.preventDefault();const el=e.target;const label=el.labels?.[0]?.textContent||el.getAttribute('aria-label')||el.name||el.id||'neznámé pole';alert('Zkontroluj pole „'+label+'“. Hodnota není platná.');el.focus()},true);
-document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('amount').value),participants=[...document.querySelectorAll('input[name="participant"]:checked')].map(x=>x.value),payer=document.getElementById('payer').value;if(!Number.isFinite(amount)||amount<=0||!payer||!participants.length){alert('Zadej platnou částku, plátce a alespoň jednoho účastníka.');return}const shares={};for(const id of participants){const input=document.querySelector('[name="share_'+CSS.escape(id)+'"]');const n=parseDecimal(input?.value);if(!Number.isFinite(n)||n<=0){alert('Podíl každého vybraného účastníka musí být větší než nula.');return}shares[id]=n}const description=document.getElementById('description').value.trim();state.expenses.push({id:crypto.randomUUID(),description,amount,payer,participants,shares,date:document.getElementById('date').value||today()});e.target.reset();document.getElementById('date').value=today();save();const success=document.getElementById('expenseSuccess');success.textContent='✓ Výdaj „'+description+'“ byl uložen ('+money(amount)+').';success.classList.add('show');document.getElementById('expenses').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>success.classList.remove('show'),6000);});
+document.getElementById('allExpenses').addEventListener('click',event=>{
+ const button=event.target.closest('[data-edit-expense]');
+ if(!button)return;
+ const expense=state.expenses.find(item=>item.id===button.dataset.editExpense);
+ if(!expense)return;
+ resetExpenseForm();
+ setExpenseEditorMode(expense.id);
+ expenseFields.description.value=expense.description;
+ expenseFields.amount.value=expense.amount;
+ expenseFields.payer.value=expense.payer;
+ expenseFields.date.value=expense.date||today();
+ for(const input of expenseForm.querySelectorAll('.person-check')){
+  input.checked=(expense.participants||[]).includes(input.value);
+  if(input.checked)expenseFields.namedItem('share_'+input.value).value=expense.shares?expense.shares[input.value]??'':'1';
+ }
+ focusExpenseEditor();
+});
+document.getElementById('cancelExpenseEdit').addEventListener('click',()=>{
+ const editButton=[...document.querySelectorAll('[data-edit-expense]')].find(button=>button.dataset.editExpense===editedExpenseId);
+ resetExpenseForm();
+ editButton?.focus();
+});
+document.getElementById('deleteEditedExpense').addEventListener('click',()=>{
+ if(!editedExpenseId||!confirm('Opravdu smazat tento výdaj?'))return;
+ state.expenses=state.expenses.filter(expense=>expense.id!==editedExpenseId);
+ resetExpenseForm();
+ save();
+});
+expenseForm.addEventListener('input',()=>setExpenseError());
+expenseForm.addEventListener('submit',event=>{
+ event.preventDefault();
+ const description=expenseFields.description.value.trim();
+ const amount=Number(expenseFields.amount.value);
+ const payer=expenseFields.payer.value;
+ const date=expenseFields.date.value||today();
+ const participants=[...expenseForm.querySelectorAll('input[name="participant"]:checked')].map(input=>input.value);
+ if(!description){setExpenseError('Zadej popis výdaje.');expenseFields.description.focus();return}
+ if(!Number.isFinite(amount)||amount<=0||!payer||!participants.length){
+  setExpenseError('Zadej platnou částku, plátce a alespoň jednoho účastníka.');
+  return;
+ }
+ const shares=Object.create(null);
+ for(const id of participants){
+  const input=expenseFields.namedItem('share_'+id);
+  const weight=parseDecimal(input.value);
+  if(!Number.isFinite(weight)||weight<=0){
+   setExpenseError('Podíl každého vybraného účastníka musí být větší než nula.');
+   input.focus();
+   return;
+  }
+  shares[id]=weight;
+ }
+ const index=state.expenses.findIndex(expense=>expense.id===editedExpenseId);
+ if(editedExpenseId&&index<0){setExpenseError('Tento výdaj už ve skupině není.');return}
+ const fields={description,amount,payer,date,participants,shares};
+ if(index>=0)state.expenses[index]={...state.expenses[index],...fields};
+ else state.expenses.push({id:crypto.randomUUID(),...fields});
+ resetExpenseForm();
+ save();
+ expenseSuccess.textContent=index>=0?'Změny výdaje byly uloženy.':'Výdaj byl uložen.';
+ expenseSuccess.classList.add('show');
+ expenseSuccess.scrollIntoView({block:'nearest'});
+ expenseMessageTimer=setTimeout(()=>expenseSuccess.classList.remove('show'),6000);
+});
 document.addEventListener('change',e=>{const input=e.target.closest('[data-person-share]');if(!input)return;const n=parseDecimal(input.value);if(!Number.isFinite(n)||n<=0){alert('Výchozí podíl musí být větší než nula.');input.value=state.people.find(p=>p.id===input.dataset.personShare)?.share||1;return}const person=state.people.find(p=>p.id===input.dataset.personShare);if(person){person.share=n;save()}});
-document.addEventListener('click',e=>{const ex=e.target.closest('[data-remove-expense]');if(ex){const id=ex.dataset.removeExpense;if(confirm('Opravdu smazat tento výdaj?')){state.expenses=state.expenses.filter(x=>x.id!==id);save()}return}const pe=e.target.closest('[data-remove-person]');if(pe){const id=pe.dataset.removePerson;if(state.expenses.some(x=>x.payer===id||x.participants.includes(id))){alert('Tohoto člena nelze odebrat, protože je uveden u některého výdaje.');return}if(confirm('Odebrat člena ze skupiny?')){state.people=state.people.filter(p=>p.id!==id);save()}}});
+document.addEventListener('click',e=>{const pe=e.target.closest('[data-remove-person]');if(pe){const id=pe.dataset.removePerson;if(state.expenses.some(x=>x.payer===id||x.participants.includes(id))){alert('Tohoto člena nelze odebrat, protože je uveden u některého výdaje.');return}if(confirm('Odebrat člena ze skupiny?')){state.people=state.people.filter(p=>p.id!==id);save()}}});
 
 function buildPdfReport(){
  const total=state.expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
@@ -575,6 +790,7 @@ document.getElementById('exportImage').addEventListener('click',async()=>{
 document.getElementById('clearExpenses').addEventListener('click',()=>{
  if(!confirm('Opravdu chceš smazat všechny částky a vyúčtování? Poznámky, název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
  state.expenses=[];
+ resetExpenseForm();
  save();
  alert('Částky byly smazány. Poznámky, název skupiny, členové i jejich podíly zůstaly zachovány.');
 });
@@ -582,6 +798,7 @@ document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
  if(!confirm('Opravdu chceš smazat všechny částky, vyúčtování i poznámky této skupiny? Tuto akci nelze vrátit. Název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
  state.expenses=[];
  state.notes=[];
+ resetExpenseForm();
  save();
  alert('Částky i poznámky byly smazány. Název skupiny, členové a jejich podíly zůstaly zachovány.');
 });
@@ -589,9 +806,10 @@ document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
 document.getElementById('date').value=today();
 // Výchozí podíl se použije pro nové platby; historické platby bez uložených podílů zůstávají rozdělené rovným dílem.
 state.people.forEach(p=>{if(!(Number(p.share)>0))p.share=1});render();updatePageTitle();
+if(remoteToken)setSyncStatus('Skupina je sdílená online.');
 
 const welcome=document.getElementById('welcome');
-const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense')];
+const appNodes=[...document.querySelectorAll('main.wrap>details,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense,main.wrap #backHome')];
 const inviteDialog=document.getElementById('inviteDialog');
 const joinDialog=document.getElementById('joinDialog');
 const joinCode=document.getElementById('joinCode');
@@ -599,6 +817,18 @@ const joinStatus=document.getElementById('joinStatus');
 const joinSubmit=document.getElementById('joinSubmit');
 const closeJoin=document.getElementById('closeJoin');
 
+let returningHome=false;
+document.getElementById('backHome').addEventListener('click',event=>{
+ event.preventDefault();
+ returningHome=true;
+ welcome.hidden=false;
+ appNodes.forEach(element=>element.classList.add('app-content-hidden'));
+ document.getElementById('groupSwitcher').open=false;
+ updateWelcomeActions();
+ updatePageTitle();
+ window.scrollTo(0,0);
+ document.getElementById('continueWelcome').focus({preventScroll:true});
+});
 function showApp(){
  welcome.hidden=true;
  appNodes.forEach(el=>el.classList.remove('app-content-hidden'));
@@ -624,7 +854,9 @@ document.getElementById('shareGroup').addEventListener('click',async event=>{
    const created=await jsonp({action:'create',name:group.name});
    if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
    token=created.group.token;
-   const data={name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]};
+   const snapshot=()=>JSON.stringify({name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]});
+   const payload=snapshot();
+   const data=JSON.parse(payload);
    await postRemote(token,data);
    const saved=await jsonp({action:'read',token});
    if(!saved.ok||!saved.group?.data||!Object.entries(data).every(([key,value])=>
@@ -632,10 +864,12 @@ document.getElementById('shareGroup').addEventListener('click',async event=>{
     throw new Error('Databáze nepotvrdila uložení celé skupiny.');
    }
    rememberRemoteToken(group.id,token);
+   if(snapshot()!==payload)syncRemote(token,group);
   }
   if(activeGroupId===group.id){
    updateShareUrl();
    setSyncStatus('Skupina je sdílená online.');
+   document.getElementById('refreshSharedGroup').hidden=false;
   }
   document.getElementById('inviteTitle').textContent='Sdílet skupinu „'+group.name+'“';
   document.getElementById('inviteLink').value=shareLink(token);
@@ -656,14 +890,23 @@ for(const [buttonId,inputId,label] of [['copyInviteLink','inviteLink','Odkaz'],[
  });
 }
 
-async function loadSharedGroup(token){
+async function loadSharedGroup(token,{refresh=false}={}){
+ const startingGroup=state;
+ const startingData=JSON.stringify(startingGroup);
+ if(remoteWrites.has(token))throw new Error('Počkej na dokončení online ukládání.');
  const response=await jsonp({action:'read',token});
  if(!response.ok||!response.group)throw new Error(response.error||'Skupina nebyla nalezena.');
+ if(remoteWrites.has(token)||(refresh&&(startingGroup!==state||startingData!==JSON.stringify(state)))){
+  throw new Error('Skupina se mezitím změnila. Zkus to znovu.');
+ }
  const remote=response.group, data=remote.data||{};
  const existing=database.groups.find(group=>remoteTokens[group.id]===token);
  const groupId=existing?.id||crypto.randomUUID();
  const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[])};
- if(existing)Object.assign(existing,group);else database.groups.push(group);
+ if(existing)Object.assign(existing,group);else {
+  database.groups=database.groups.filter(item=>!item.placeholder);
+  database.groups.push(group);
+ }
  rememberRemoteToken(groupId,token);
  showApp();
  activateGroup(groupId);
@@ -701,17 +944,18 @@ window.addEventListener('hashchange',()=>{
  const token=new URLSearchParams(location.hash.slice(1)).get('group');
  if(token&&!joinSubmit.disabled){showJoinDialog(token);joinGroup(token)}
 });
-document.getElementById('continueWelcome').hidden=database.groups.length===0;
+updateWelcomeActions();
 document.getElementById('continueWelcome').addEventListener('click',()=>{
  showApp();
- if(remoteToken)document.getElementById('refreshAppFooter').click();
+ if(remoteToken&&!returningHome)document.getElementById('refreshSharedGroup').click();
+ returningHome=false;
 });
-document.getElementById('refreshAppFooter').addEventListener('click',async event=>{
- if(!remoteToken){location.reload();return}
+document.getElementById('refreshSharedGroup').addEventListener('click',async event=>{
+ if(!remoteToken)return;
  const button=event.currentTarget;
- if(remoteSaving){alert('Počkej, než se změny uloží online.');return}
+ if(remoteWrites.has(remoteToken)){alert('Počkej, než se změny uloží online.');return}
  button.disabled=true;
- try{await loadSharedGroup(remoteToken)}
+ try{await loadSharedGroup(remoteToken,{refresh:true})}
  catch(err){alert('Skupinu se nepodařilo obnovit. '+err.message)}
  finally{button.disabled=false}
 });
@@ -737,16 +981,30 @@ document.getElementById('importDataFile').addEventListener('change',async ev=>{
  }catch(err){alert('Zálohu se nepodařilo načíst: '+err.message)}
  finally{ev.target.value=''}
 });
-document.getElementById('createLocalWelcome').addEventListener('click',()=>{
- const raw=prompt('Jak se bude skupina jmenovat?','Nová skupina');
- if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}
- const group=emptyGroup(name);database.groups.push(group);showApp();activateGroup(group.id);
-});
-document.getElementById('createOnlineWelcome').addEventListener('click',async()=>{
- const raw=prompt('Jak se bude sdílená skupina jmenovat?','Kamarádi');
- if(raw===null)return;const name=raw.trim();if(!name){alert('Zadej název skupiny.');return}
- const group=emptyGroup(name);database.groups.push(group);showApp();activateGroup(group.id);
- document.getElementById('shareGroup').click();
-});
+function updateWelcomeActions(){
+ const hasGroups=database.groups.some(group=>!group.placeholder);
+ document.getElementById('continueWelcome').hidden=!hasGroups;
+ const create=document.getElementById('createLocalWelcome');
+ create.classList.toggle('primary',!hasGroups);
+ create.classList.toggle('secondary',hasGroups);
+}
+function createGroup(){
+ const raw=prompt('Jak se bude skupina jmenovat?','');
+ if(raw===null)return;
+ const name=raw.trim();
+ if(!name){alert('Zadej název skupiny.');return}
+ if(database.groups.some(group=>!group.placeholder&&group.name.toLocaleLowerCase('cs')===name.toLocaleLowerCase('cs'))){
+  alert('Skupina s tímto názvem už existuje.');
+  return;
+ }
+ const group=emptyGroup(name);
+ database.groups=database.groups.filter(item=>!item.placeholder);
+ database.groups.push(group);
+ showApp();
+ activateGroup(group.id);
+ document.querySelector('[data-tab="people"]').click();
+}
+document.getElementById('createLocalWelcome').addEventListener('click',createGroup);
+document.getElementById('addGroup').addEventListener('click',createGroup);
 </script>
 </body></html>
