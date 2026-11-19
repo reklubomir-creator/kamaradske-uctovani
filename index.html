@@ -508,11 +508,13 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   </div>
   <button class="install-help-link" type="button" data-install-help>Jak propojit skupiny s aplikací na ploše?</button>
   <details class="welcome-backups">
-    <summary>Záloha skupin</summary>
+    <summary>Přenos skupin</summary>
     <div class="compact-actions">
-      <button class="secondary" id="exportDataWelcome" type="button">Exportovat zálohu</button>
-      <button class="secondary" id="importDataWelcome" type="button">Načíst zálohu</button>
+      <button class="secondary" id="exportDataWelcome" type="button">Uložit všechny skupiny</button>
+      <button class="secondary" id="importDataWelcome" type="button">Načíst skupiny ze souboru</button>
     </div>
+    <p class="muted">Jeden soubor přenese sdílené i místní skupiny. Obsahuje jejich data a přístupové kódy, proto ho uchovávej pro sebe.</p>
+    <p id="transferStatus" class="muted" role="status"></p>
     <input id="importDataFile" type="file" accept="application/json,.json" hidden>
   </details>
 </section>
@@ -559,7 +561,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.3.0</span>
+  <span>Verze 1.4.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -591,11 +593,11 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <dialog id="installHelpDialog" class="card" aria-labelledby="installHelpTitle">
   <h2 id="installHelpTitle">Skupiny v aplikaci na ploše</h2>
   <ol>
-    <li>Otevři skupinu v původním prohlížeči. V menu pod logem klepni na <strong>Sdílet skupinu → Kopírovat kód</strong>.</li>
+    <li>V původním prohlížeči na úvodu otevři <strong>Přenos skupin → Uložit všechny skupiny</strong>. Soubor najdeš v aplikaci Soubory, obvykle ve Stažených souborech.</li>
     <li>V Safari klepni na <strong>Sdílet → Přidat na plochu</strong>. Pokud vidíš přepínač <strong>Otevřít jako webovou aplikaci</strong>, zapni ho.</li>
-    <li>Otevři novou ikonu na ploše. Na úvodu klepni na <strong>Zadat kód skupiny</strong>, vlož kód a zvol <strong>Připojit se</strong>.</li>
+    <li>Otevři ikonu na ploše a na úvodu zvol <strong>Přenos skupin → Načíst skupiny ze souboru</strong>. Vyber uložený soubor.</li>
   </ol>
-  <p class="muted">Pro další skupiny zopakuj zkopírování a vložení jejich kódu. Připojíš se ke stávajícím skupinám i s jejich výdaji a poznámkami.</p>
+  <p class="muted">Jedním souborem přeneseš i místní skupiny včetně výdajů a poznámek. Sdílené skupiny zůstanou propojené online. Pro jednu sdílenou skupinu můžeš dál použít její kód.</p>
   <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
 </dialog>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
@@ -761,7 +763,7 @@ function render(){
 const b=balances();document.getElementById('balances').innerHTML=state.people.length?sortedPeople().map(p=>'<div class="item"><span>'+esc(p.name)+'</span><strong class="amount '+(b[p.id]>0.005?'positive':b[p.id]<-.005?'negative':'')+'">'+(b[p.id]>0.005?'+':'')+money(b[p.id]||0)+'</strong></div>').join(''):'<div class="empty">Nejdřív přidej členy skupiny.</div>';
 const s=settlements();document.getElementById('settlements').innerHTML=s.length?s.map(x=>'<div class="item"><div><div class="item-title">'+esc(x.from)+' <span class="muted">→</span> '+esc(x.to)+'</div><div class="muted">Doporučené vyrovnání</div></div><strong class="amount">'+money(x.amount)+'</strong></div>').join(''):'<div class="empty">'+(state.people.length>1?'Zatím není co vyrovnávat.':'Přidej alespoň dva členy a zadej výdaje.')+'</div>';
 const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));document.getElementById('allExpenses').innerHTML=sorted.length?sorted.map(expenseMarkup).join(''):'<div class="empty">Zatím tu nejsou žádné výdaje.</div>';
-document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+p.id+'"><button class="danger" data-remove-person="'+p.id+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
+document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+esc(p.id)+'"><button class="danger" data-remove-person="'+esc(p.id)+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
 renderExpensePeople();
  document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
@@ -1499,31 +1501,144 @@ navigator.serviceWorker?.addEventListener('message',event=>{
  if(editedExpenseId||expenseFields.description.value||expenseFields.amount.value||document.getElementById('groupNoteInput').value)return;
  document.getElementById('refreshSharedGroup').click();
 });
+const transferStatus=document.getElementById('transferStatus');
+const transferFormat='kamaradske-uctovani-transfer';
+
+function groupHasData(group){
+ return !group.placeholder||group.people.length>0||group.expenses.length>0||
+  (typeof group.notes==='string'?Boolean(group.notes.trim()):Boolean(group.notes?.length));
+}
+function parseGroupTransfer(raw){
+ const payload=JSON.parse(raw);
+ const supported=payload&&(payload.format===transferFormat||payload.format==='kamaradske-uctovani-backup')&&payload.version===1;
+ const groups=payload?.database?.groups;
+ const tokens=payload?.remoteTokens??{};
+ const identifier=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(value);
+ const validGroup=group=>group&&identifier(group.id)&&typeof group.name==='string'&&
+  Array.isArray(group.people)&&group.people.every(person=>person&&identifier(person.id)&&typeof person.name==='string')&&
+  Array.isArray(group.expenses)&&group.expenses.every(expense=>expense&&identifier(expense.id)&&
+   typeof expense.description==='string'&&Number.isFinite(Number(expense.amount))&&
+   Array.isArray(expense.participants)&&expense.participants.every(identifier)&&
+   (expense.date==null||typeof expense.date==='string'))&&
+  (group.notes==null||typeof group.notes==='string'||(Array.isArray(group.notes)&&group.notes.every(note=>
+   note&&identifier(note.id)&&typeof note.text==='string')));
+ if(!supported||!Array.isArray(groups)||!groups.every(validGroup)||
+    new Set(groups.map(group=>group.id)).size!==groups.length||
+    typeof tokens!=='object'||Array.isArray(tokens)||Object.values(tokens).some(token=>
+     typeof token!=='string'||(token!==''&&(token.length>256||/\s/.test(token))))){
+  throw new Error('Soubor není platná záloha ani přenos Kamarádského účtování.');
+ }
+ return {groups:groups.filter(groupHasData),tokens,activeId:payload.database.activeGroupId};
+}
+function mergeGroupTransfer(current,existingTokens,backup){
+ const groups=current.groups.filter(groupHasData);
+ const tokens=Object.assign(Object.create(null),existingTokens);
+ const byId=new Map(groups.map(group=>[group.id,group]));
+ const byToken=new Map(groups.filter(group=>tokens[group.id]).map(group=>[tokens[group.id],group.id]));
+ const transferredIds=new Map();
+ let added=0,linked=0,skipped=0;
+ const fingerprint=group=>JSON.stringify([group.transferOriginalName??group.name,group.people,group.expenses,group.notes??[]]);
+
+ for(const source of backup.groups){
+  const token=Object.hasOwn(backup.tokens,source.id)?backup.tokens[source.id]:'';
+  const onlineMatch=token&&byToken.get(token);
+  if(onlineMatch){
+   transferredIds.set(source.id,onlineMatch);
+   skipped++;
+   continue;
+  }
+  const sameId=byId.get(source.id);
+  const identical=groups.find(group=>(group.id===source.id||group.transferSourceId===(source.transferSourceId??source.id))&&
+   (!token||!tokens[group.id])&&fingerprint(group)===fingerprint(source));
+  if(identical){
+   transferredIds.set(source.id,identical.id);
+   if(token){
+    tokens[identical.id]=token;
+    byToken.set(token,identical.id);
+    linked++;
+   }else skipped++;
+   continue;
+  }
+  const uniqueSource={...source,placeholder:false};
+  if(sameId){
+   uniqueSource.id=crypto.randomUUID();
+   uniqueSource.transferSourceId=source.transferSourceId??source.id;
+   uniqueSource.transferOriginalName=source.transferOriginalName??source.name;
+   uniqueSource.name=uniqueSource.transferOriginalName+' (z přenosu)';
+  }
+  groups.push(uniqueSource);
+  byId.set(uniqueSource.id,uniqueSource);
+  transferredIds.set(source.id,uniqueSource.id);
+  if(token){
+   tokens[uniqueSource.id]=token;
+   byToken.set(token,uniqueSource.id);
+  }
+  added++;
+ }
+ const nextActive=byId.has(current.activeGroupId)?current.activeGroupId:
+  transferredIds.get(backup.activeId)||groups[0]?.id;
+ return {database:{...current,groups,activeGroupId:nextActive},tokens,added,linked,skipped};
+}
+function commitGroupTransfer(result){
+ const previousDatabase=localStorage.getItem(KEY);
+ localStorage.setItem(KEY,JSON.stringify(result.database));
+ try{localStorage.setItem(REMOTE_KEY,JSON.stringify(result.tokens))}
+ catch(error){
+  if(previousDatabase===null)localStorage.removeItem(KEY);
+  else localStorage.setItem(KEY,previousDatabase);
+  throw error;
+ }
+ database=result.database;
+ remoteTokens=result.tokens;
+ activeGroupId=database.activeGroupId;
+ state=database.groups.find(group=>group.id===activeGroupId);
+ remoteToken=remoteTokens[activeGroupId]||'';
+ resetExpenseForm();
+ render();
+ updateWelcomeActions();
+ void updatePushPreferences();
+}
 document.getElementById('exportDataWelcome').addEventListener('click',()=>{
  try{
-  const backup={format:'kamaradske-uctovani-backup',version:1,exportedAt:new Date().toISOString(),database:JSON.parse(localStorage.getItem(KEY)||'null'),remoteTokens:JSON.parse(localStorage.getItem(REMOTE_KEY)||'{}')};
-  if(!backup.database||!Array.isArray(backup.database.groups))throw new Error('V tomto prohlížeči nejsou uložené žádné skupiny.');
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kamaradske-uctovani-zaloha.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
- }catch(err){alert('Zálohu se nepodařilo vytvořit: '+err.message)}
+  const groups=database.groups.filter(groupHasData);
+  if(!groups.length)throw new Error('V tomto prohlížeči nejsou uložené žádné skupiny.');
+  const tokens=Object.fromEntries(groups.filter(group=>remoteTokens[group.id]).map(group=>[group.id,remoteTokens[group.id]]));
+  const payload={format:transferFormat,version:1,exportedAt:new Date().toISOString(),
+   database:{...database,groups},remoteTokens:tokens};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download='kamaradske-uctovani-skupiny.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  transferStatus.textContent='Soubor se skupinami najdeš ve stažených souborech.';
+ }catch(error){transferStatus.textContent='Soubor se nepodařilo uložit. '+error.message}
 });
 document.getElementById('importDataWelcome').addEventListener('click',()=>document.getElementById('importDataFile').click());
-document.getElementById('importDataFile').addEventListener('change',async ev=>{
- const file=ev.target.files&&ev.target.files[0];if(!file)return;
+document.getElementById('importDataFile').addEventListener('change',async event=>{
+ const input=event.currentTarget;
+ const file=input.files?.[0];
+ if(!file)return;
+ const button=document.getElementById('importDataWelcome');
+ button.disabled=true;
  try{
-  const backup=JSON.parse(await file.text());
-  if(backup.format!=='kamaradske-uctovani-backup'||!backup.database||!Array.isArray(backup.database.groups))throw new Error('Soubor není platná záloha Kamarádského účtování.');
-  if(!confirm('Načíst '+backup.database.groups.length+' skupin ze zálohy? Stávající skupiny v této webové aplikaci budou nahrazeny obsahem zálohy.'))return;
-  localStorage.setItem(KEY,JSON.stringify(backup.database));
-  localStorage.setItem(REMOTE_KEY,JSON.stringify(backup.remoteTokens||{}));
-  alert('Skupiny byly načteny. Aplikace se nyní obnoví.');
-  location.reload();
- }catch(err){alert('Zálohu se nepodařilo načíst: '+err.message)}
- finally{ev.target.value=''}
+  const backup=parseGroupTransfer(await file.text());
+  const result=mergeGroupTransfer(database,remoteTokens,backup);
+  if(result.added||result.linked){
+   commitGroupTransfer(result);
+   transferStatus.textContent='Přidáno skupin: '+result.added+' · Nově propojeno online: '+result.linked+
+    ' · Už máš: '+result.skipped+'. Skupiny otevřeš přes Pokračovat do skupin.';
+  }else transferStatus.textContent=result.skipped?'Tyto skupiny už v aplikaci máš.':'Soubor neobsahuje žádné uložené skupiny.';
+ }catch(error){transferStatus.textContent='Skupiny se nepodařilo načíst. '+error.message}
+ finally{input.value='';button.disabled=false}
 });
 function updateWelcomeActions(){
- const hasGroups=database.groups.some(group=>!group.placeholder);
+ const hasGroups=database.groups.some(groupHasData);
  document.getElementById('continueWelcome').hidden=!hasGroups;
+ document.getElementById('exportDataWelcome').hidden=!hasGroups;
  const create=document.getElementById('createLocalWelcome');
  create.classList.toggle('primary',!hasGroups);
  create.classList.toggle('secondary',hasGroups);
