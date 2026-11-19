@@ -22,6 +22,7 @@ applyAppearance();
 systemTheme.addEventListener('change',applyAppearance);
 </script>
 <link rel="icon" type="image/png" sizes="180x180" href="./app-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./app-icon.png">
 <meta property="og:image" content="https://finance.lubarek.cz/app-icon.png">
 <meta name="twitter:image" content="https://finance.lubarek.cz/app-icon.png">
@@ -357,7 +358,28 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   background: #173f35;
   box-shadow: 0 -3px #173f35, 0 3px #173f35;
 }
-.appearance-field {margin-bottom: 0;}
+.appearance-field {margin: 0; padding: 0; border: 0;}
+.appearance-field legend {padding: 0 0 6px; color: var(--muted); font-size: .875rem; font-weight: 700;}
+.appearance-options {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;}
+.appearance-options label {position: relative; cursor: pointer;}
+.appearance-options input {position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden;}
+.appearance-options span {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--green);
+  font: 25px/1 system-ui, sans-serif;
+}
+.appearance-options input:checked + span {background: var(--mint); border-color: var(--green);}
+.appearance-options input:focus-visible + span {outline: 2px solid var(--green); outline-offset: 2px;}
+.device-mark {width: 19px; height: 14px; border: 2px solid currentColor; border-radius: 3px; position: relative;}
+.device-mark::after {content: ""; position: absolute; width: 8px; height: 2px; border-radius: 2px; bottom: -5px; left: calc(50% - 4px); background: currentColor;}
+.install-help-link {border: 0; background: none; color: var(--green); padding: 8px 0; min-height: 44px; text-decoration: underline;}
+#installHelpDialog {width: min(520px, calc(100% - 32px));}
+#installHelpDialog ol {padding-left: 22px;}
+#installHelpDialog li {margin-bottom: 10px;}
 #groupMenuContent {margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);}
 .group-actions > .group-menu {
   position: absolute;
@@ -446,14 +468,14 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
         <span class="logo-menu-mark" aria-hidden="true"></span>
       </summary>
       <div class="group-menu">
-        <div class="field appearance-field">
-          <label for="appearance">Vzhled</label>
-          <select id="appearance">
-            <option value="system">Podle zařízení</option>
-            <option value="light">Světlý</option>
-            <option value="dark">Tmavý</option>
-          </select>
-        </div>
+        <fieldset class="appearance-field" id="appearance">
+          <legend>Vzhled</legend>
+          <div class="appearance-options">
+            <label title="Světlý"><input type="radio" name="appearance" value="light" aria-label="Světlý"><span aria-hidden="true">☀</span></label>
+            <label title="Tmavý"><input type="radio" name="appearance" value="dark" aria-label="Tmavý"><span aria-hidden="true">☾</span></label>
+            <label title="Podle zařízení"><input type="radio" name="appearance" value="system" aria-label="Podle zařízení"><span aria-hidden="true"><i class="device-mark"></i></span></label>
+          </div>
+        </fieldset>
         <button class="secondary full" id="openNotifications" type="button">Nastavení upozornění</button>
         <div id="groupMenuContent" class="app-content-hidden">
           <div class="row">
@@ -484,6 +506,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
     <button class="primary" id="createLocalWelcome" type="button">Založit skupinu</button>
     <button class="secondary" type="button" data-join-group>Zadat kód skupiny</button>
   </div>
+  <button class="install-help-link" type="button" data-install-help>Jak propojit skupiny s aplikací na ploše?</button>
   <details class="welcome-backups">
     <summary>Záloha skupin</summary>
     <div class="compact-actions">
@@ -536,7 +559,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.2.0</span>
+  <span>Verze 1.2.1</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -561,6 +584,16 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   </fieldset>
   <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
 </dialog>
+<dialog id="installHelpDialog" class="card" aria-labelledby="installHelpTitle">
+  <h2 id="installHelpTitle">Skupiny v aplikaci na ploše</h2>
+  <ol>
+    <li>Otevři skupinu v původním prohlížeči. V menu pod logem klepni na <strong>Sdílet skupinu → Kopírovat kód</strong>.</li>
+    <li>V Safari klepni na <strong>Sdílet → Přidat na plochu</strong>. Pokud vidíš přepínač <strong>Otevřít jako webovou aplikaci</strong>, zapni ho.</li>
+    <li>Otevři novou ikonu na ploše. Na úvodu klepni na <strong>Zadat kód skupiny</strong>, vlož kód a zvol <strong>Připojit se</strong>.</li>
+  </ol>
+  <p class="muted">Pro další skupiny zopakuj zkopírování a vložení jejich kódu. Připojíš se ke stávajícím skupinám i s jejich výdaji a poznámkami.</p>
+  <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
+</dialog>
 <dialog id="inviteDialog" class="card" aria-labelledby="inviteTitle" style="width:min(480px,calc(100% - 32px))">
   <h2 id="inviteTitle">Sdílet skupinu</h2>
   <p>Každý s odkazem nebo kódem může skupinu zobrazit a upravovat.</p>
@@ -569,6 +602,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <div class="field" style="margin-top:12px"><label for="inviteCode">Kód skupiny</label><input id="inviteCode" readonly></div>
   <button class="secondary full" id="copyInviteCode" type="button">Kopírovat kód</button>
   <p class="muted" id="copyInviteStatus" role="status"></p>
+  <button class="install-help-link" type="button" data-install-help>Jak propojit skupiny s aplikací na ploše?</button>
   <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
 </dialog>
 <dialog id="joinDialog" class="card" aria-labelledby="joinTitle" style="width:min(480px,calc(100% - 32px))">
@@ -812,10 +846,10 @@ function activateGroup(id){
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 const groupActions=document.getElementById('groupSwitcher');
-const appearanceSelect=document.getElementById('appearance');
-appearanceSelect.value=appearance;
-appearanceSelect.addEventListener('change',()=>{
- appearance=appearanceSelect.value;
+const appearanceOptions=document.getElementById('appearance');
+for(const choice of appearanceOptions.querySelectorAll('input'))choice.checked=choice.value===appearance;
+appearanceOptions.addEventListener('change',event=>{
+ appearance=event.target.value;
  applyAppearance();
  try{localStorage.setItem(themeKey,appearance)}catch{}
 });
@@ -1058,6 +1092,8 @@ if(remoteToken)setSyncStatus('Skupina je sdílená online.');
 
 const welcome=document.getElementById('welcome');
 const appNodes=[...document.querySelectorAll('main.wrap>.group-toolbar,main.wrap>.tabs,main.wrap>.panel,main.wrap>#pdfReport,main.wrap>#quickExpense,main.wrap #backHome,#groupMenuContent')];
+const installHelpDialog=document.getElementById('installHelpDialog');
+document.querySelectorAll('[data-install-help]').forEach(button=>button.addEventListener('click',()=>installHelpDialog.showModal()));
 const inviteDialog=document.getElementById('inviteDialog');
 const joinDialog=document.getElementById('joinDialog');
 const joinCode=document.getElementById('joinCode');
