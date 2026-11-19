@@ -1,5 +1,8 @@
 name: Deploy Web Push
 on:
+  push:
+    branches: [main]
+    paths: ['push/**']
   workflow_dispatch:
 permissions:
   contents: read

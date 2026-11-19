@@ -551,7 +551,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <button id="expenseAddMember" class="secondary" type="button">Přidat člena</button>
 </div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div>
 <div class="field expense-date"><label for="date">Datum</label><input id="date" type="date" required></div>
-<div class="field" id="expenseAuthorField"><label for="expenseAuthor">Kdo výdaj zapisuje?</label><select id="expenseAuthor" required></select></div><div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
+<div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
 <div class="expense-form-actions">
   <button class="primary full" id="saveExpense" type="submit">Uložit výdaj</button>
   <button class="secondary" id="cancelExpenseEdit" type="button" hidden>Zrušit úpravy</button>
@@ -561,7 +561,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.4.0</span>
+  <span>Verze 1.5.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -577,6 +577,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <h2 id="notificationsTitle">Upozornění</h2>
   <p class="muted">Vyber, na které změny tě má aplikace upozornit. Systémová oznámení pro sdílené skupiny můžeš povolit zvlášť na tomto zařízení.</p>
   <label class="notification-option"><input type="checkbox" id="notificationsEnabled"> Zobrazovat upozornění</label>
+  <label class="field">Moje jméno v této skupině (volitelné)<select id="notificationAuthor"></select></label>
   <fieldset id="notificationEvents">
     <legend>Upozornit na</legend>
     <label class="notification-option"><input type="checkbox" data-notification-type="added"> Nové výdaje</label>
@@ -586,6 +587,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   </fieldset>
   <div class="field">
     <button class="secondary" id="pushToggle" type="button" disabled>Povolit systémová oznámení</button>
+    <button class="secondary" id="testPush" type="button" hidden>Vyzkoušet oznámení za 20 sekund</button>
     <small class="muted" id="pushStatus" role="status"></small>
   </div>
   <form method="dialog"><button class="primary" type="submit">Zavřít</button></form>
@@ -782,16 +784,12 @@ let editedExpenseId=null;
 let expenseMessageTimer;
 function renderExpensePeople(preserveDraft=true){
  const payer=expenseFields.payer.value;
- const preferredAuthor=(preserveDraft&&expenseFields.expenseAuthor.value)||authorPreferences[activeGroupId];
  const checks=new Map([...expenseForm.querySelectorAll('.person-check')].map(input=>{
   const weight=expenseFields.namedItem('share_'+input.value);
   return [input.value,{checked:input.checked,weight:editedExpenseId||weight.value!==weight.defaultValue?weight.value:undefined}];
  }));
  const memberOptions=sortedPeople().map(person=>'<option value="'+esc(person.id)+'">'+esc(person.name)+'</option>').join('');
  expenseFields.payer.innerHTML=memberOptions;
- expenseFields.expenseAuthor.innerHTML='<option value="">Vyber své jméno</option>'+memberOptions;
- if(state.people.some(person=>person.id===preferredAuthor))expenseFields.expenseAuthor.value=preferredAuthor;
- else if(state.people.length===1)expenseFields.expenseAuthor.value=state.people[0].id;
  document.getElementById('participants').innerHTML=sortedPeople().map(p=>'<div class="participant-row"><input class="person-check" type="checkbox" name="participant" value="'+esc(p.id)+'" checked aria-label="Započítat '+esc(p.name)+'"><span style="min-width:0">'+esc(p.name)+'</span><span class="muted">podíl</span><input class="share-input" type="text" inputmode="decimal" name="share_'+esc(p.id)+'" min="0.01" step="0.25" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Podíl pro '+esc(p.name)+'"></div>').join('');document.querySelector('#expenseForm button[type=submit]').disabled=state.people.length===0;
  document.getElementById('expenseNeedsMember').classList.toggle('hidden',state.people.length>0);
 
@@ -814,8 +812,6 @@ function setExpenseEditorMode(id=null){
  document.getElementById('saveExpense').textContent=id?'Uložit změny':'Uložit výdaj';
  document.getElementById('cancelExpenseEdit').hidden=!id;
  document.getElementById('deleteEditedExpense').hidden=!id;
- document.getElementById('expenseAuthorField').hidden=Boolean(id);
- expenseFields.expenseAuthor.disabled=Boolean(id);
  setExpenseError();
  clearTimeout(expenseMessageTimer);
  expenseSuccess.classList.remove('show');
@@ -997,10 +993,8 @@ expenseForm.addEventListener('submit',event=>{
   savedExpense={...state.expenses[index],...fields};
   state.expenses[index]=savedExpense;
  }else{
-  const author=state.people.find(person=>person.id===expenseFields.expenseAuthor.value);
-  if(!author){setExpenseError('Vyber, kdo výdaj zapisuje.');expenseFields.expenseAuthor.focus();return}
-  rememberExpenseAuthor(author.id);
-  savedExpense={id:crypto.randomUUID(),...fields,addedById:author.id,addedByName:author.name};
+  const author=state.people.find(person=>person.id===authorPreferences[activeGroupId]);
+  savedExpense={id:crypto.randomUUID(),...fields,...(author?{addedById:author.id,addedByName:author.name}:{})};
   state.expenses.push(savedExpense);
  }
  resetExpenseForm();
@@ -1135,7 +1129,17 @@ let pushSubscription;
 const selectedPushTypes=()=>notificationPreferences.enabled
  ? notificationOptions.map(option=>option.dataset.notificationType).filter(type=>notificationPreferences[type]) : [];
 
+const testPush=document.getElementById('testPush');
+testPush.onclick=async()=>{
+ testPush.disabled=true;
+ try{
+  await window.financePush.test(Object.values(remoteTokens).find(Boolean),pushSubscription);
+  pushStatus.textContent='Test je naplánovaný. Teď aplikaci zavři nebo zamkni telefon.';
+ }catch{pushStatus.textContent='Test se nepodařilo naplánovat. Zkontroluj připojení a povolení oznámení.'}
+ finally{testPush.disabled=false}
+};
 async function preparePushSettings(){
+ testPush.hidden=true;
  const client=window.financePush;
  pushToggle.disabled=true;
  pushStatus.textContent='';
@@ -1147,6 +1151,7 @@ async function preparePushSettings(){
   pushSubscription=await client.currentSubscription();
   pushToggle.textContent=pushSubscription?'Vypnout systémová oznámení':'Povolit systémová oznámení';
   if(pushSubscription){
+   testPush.hidden=!Object.values(remoteTokens).some(Boolean);
    pushToggle.disabled=false;
    pushStatus.textContent='Toto zařízení je přihlášené k systémovým oznámením.';
    return;
@@ -1214,7 +1219,11 @@ function renderNotificationPreferences(){
  notificationEvents.disabled=!notificationPreferences.enabled;
  for(const option of notificationOptions)option.checked=notificationPreferences[option.dataset.notificationType];
 }
+const notificationAuthor=document.getElementById('notificationAuthor');
+notificationAuthor.onchange=()=>rememberExpenseAuthor(notificationAuthor.value);
 document.getElementById('openNotifications').addEventListener('click',()=>{
+ notificationAuthor.innerHTML='<option value="">Neuvádět jméno</option>'+sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+ notificationAuthor.value=authorPreferences[activeGroupId]||'';
  renderNotificationPreferences();
  groupActions.open=false;
  notificationsDialog.showModal();
@@ -1278,7 +1287,7 @@ function rememberLocalRemovals(ids){
 function announceExpense(type,expense,people=state.people,canRefresh=false){
  const titles={added:'Nový výdaj',edited:'Upravený výdaj',removed:'Smazaný výdaj'};
  const author=expense.addedByName||people.find(person=>person.id===expense.addedById)?.name;
- const attribution=type==='added'?'Zapsal(a) '+(author||'neznámý člen')+' · ':'';
+ const attribution=type==='added'&&author?'Zapsal(a) '+author+' · ':'';
  showNotification(type,titles[type],attribution+money(expense.amount)+' · '+expense.description,canRefresh);
 }
 function notificationSnapshot(group){

@@ -77,5 +77,9 @@
     await request('/sync', { token, sender });
   }
 
-  window.financePush = { supported, configuration, currentSubscription, enroll, apply, stop, publish };
+  async function test(token, subscription) {
+    await request('/test', { token, endpoint: subscription.endpoint });
+  }
+
+  window.financePush = { test, supported, configuration, currentSubscription, enroll, apply, stop, publish };
 })();

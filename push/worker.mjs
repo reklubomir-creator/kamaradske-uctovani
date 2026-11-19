@@ -98,7 +98,7 @@ function notificationFor(changes, subscription) {
   const title = { added: "Nový výdaj", edited: "Upravený výdaj", removed: "Smazaný výdaj", note: "Nová poznámka" }[newest.type];
   const amount = Number.isFinite(newest.entry?.amount) ? money.format(newest.entry.amount) : "";
   const singleBody = newest.type === "added"
-    ? [newest.entry.author ? "Zapsal(a) " + newest.entry.author : "Autor nezadán", amount].filter(Boolean).join(" · ")
+    ? [newest.entry.author ? "Zapsal(a) " + newest.entry.author : "", amount].filter(Boolean).join(" · ")
     : amount || "Ve sdílené skupině je nová poznámka.";
   const others = related.length > 1 ? " (+ další změny: " + (related.length - 1) + ")" : "";
   return { title, body: singleBody + others, groupId: subscription.groupId };
@@ -117,6 +117,28 @@ export class PushStore {
     return queued;
   }
 
+  alarm() {
+    const queued = this.pending.then(() => this.sendTests());
+    this.pending = queued.catch(() => {});
+    return queued;
+  }
+
+  async sendTests() {
+    const pending = await this.storage.list({prefix: "test:"});
+    const now = Date.now();
+    let next = Infinity;
+    for (const [key, due] of pending) {
+      if (due > now) { next = Math.min(next, due); continue; }
+      const device = await this.storage.get(key.slice(5));
+      if (device) {
+        const response = await deliverPush(device, {title: "Test upozornění", body: "Oznámení na tomto zařízení fungují.", groupId: device.groupId}, await getKey(this.env), this.env.APP_ORIGIN);
+        if (response.status >= 500 || response.status === 429) throw new Error("Retry test delivery");
+      }
+      await this.storage.delete(key);
+    }
+    if (Number.isFinite(next)) await this.storage.setAlarm(next);
+  }
+
   async handle(request) {
     const path = new URL(request.url).pathname;
     if (path === "/key") {
@@ -128,6 +150,18 @@ export class PushStore {
       return json(key);
     }
     const data = await request.json();
+    if (path === "/test") {
+      const id = "sub:" + await digest(data.endpoint);
+      if (!await this.storage.get(id)) return json({error: "Device not subscribed"}, 404);
+      const key = "test:" + id;
+      const due = Date.now() + 20000;
+      if (!await this.storage.get(key)) {
+        await this.storage.put(key, due);
+      }
+      const alarm = await this.storage.getAlarm();
+      if (alarm === null || alarm > due) await this.storage.setAlarm(due);
+      return json({ok: true});
+    }
     if (path === "/unsubscribe") {
       await this.storage.delete("sub:" + await digest(data.endpoint));
       return json({ ok: true });
@@ -182,7 +216,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     try {
       if (path === "/config" && request.method === "GET") return reply({ publicKey: (await getKey(env)).publicKey });
-      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/sync"].includes(path)) return reply({ error: "Not found" }, 404);
+      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/sync"].includes(path)) return reply({ error: "Not found" }, 404);
       let data;
       try { data = await boundedJson(request); }
       catch { return reply({ error: "Invalid body" }, 400); }
@@ -191,7 +225,7 @@ export default {
         !validSubscription(data.subscription) || typeof data.groupId !== "string" || !/^[\w-]{1,80}$/.test(data.groupId)
         || !Array.isArray(data.types) || data.types.length > EVENT_TYPES.length || data.types.some(type => !EVENT_TYPES.includes(type))
       )) return reply({ error: "Invalid subscription" }, 400);
-      if (path === "/unsubscribe" && (typeof data.endpoint !== "string" || data.endpoint.length > 2048)) return reply({ error: "Invalid endpoint" }, 400);
+      if (["/unsubscribe", "/test"].includes(path) && (typeof data.endpoint !== "string" || data.endpoint.length > 2048)) return reply({ error: "Invalid endpoint" }, 400);
       const id = env.PUSH_STORE.idFromName("group:" + await digest(data.token));
       const result = await env.PUSH_STORE.get(id).fetch("https://internal" + path, {
         method: "POST", body: JSON.stringify(data),
