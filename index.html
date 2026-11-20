@@ -563,8 +563,27 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
  .mascot .pixel-icon {display:none;}
  [data-appearance="dos"] .mascot-body::before {content:"[>_]";font:bold 13px monospace;}
  [data-appearance="pixel"] .mascot .pixel-icon {display:block;}
- [data-appearance="mac"] .mascot-body::before {content:"▣";font:bold 23px Tiny5,monospace;}
- [data-appearance="office"] .mascot-body::before {content:"📎";font:20px/1 sans-serif;transform:rotate(20deg);}
+ [data-appearance="mac"] .mascot-body::before {
+   content:"";position:absolute;top:2px;width:21px;height:24px;
+   background:#e4dcc7;border:2px solid #4a4340;border-radius:3px;
+   box-shadow:1px 1px 0 #8e8473;
+ }
+ [data-appearance="mac"] .mascot-body::after {
+   content:"";position:absolute;top:6px;width:13px;height:10px;
+   background:#456158;border:1px solid #3d3834;border-radius:2px;
+   box-shadow:3px 10px 0 -3px #4a4340;
+ }
+ [data-appearance="office"] .mascot-body::before {
+   content:"";position:absolute;top:3px;left:11px;width:18px;height:21px;
+   background:repeating-linear-gradient(#fff4cf 0 4px,#aac1dd 4px 5px) 0 3px;
+   border:1px solid #7b8c9c;border-radius:2px;transform:rotate(9deg);
+   box-shadow:1px 1px 0 #42577155;
+ }
+ [data-appearance="office"] .mascot-body::after {
+   content:"";position:absolute;top:1px;left:9px;width:8px;height:16px;
+   border:2px solid #4a617a;border-bottom-color:transparent;
+   border-radius:6px;transform:rotate(-15deg);
+ }
 }
 @media screen and (prefers-reduced-motion:no-preference) {
  .mascot {animation:mascot-travel 14s ease-in-out infinite alternate;}
@@ -693,7 +712,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.9.3</span>
+  <span>Verze 1.9.4</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
