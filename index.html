@@ -511,6 +511,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
   :root[data-appearance="pixel"] h2 {letter-spacing:.035em;color:#83efdf;}
 }
 
+@font-face {font-family:Tiny5;src:url("https://fonts.gstatic.com/s/tiny5/v4/KFPmCnmCvdGT7gY17YjFsqU5P8HylYh0cHNgqfzNZyHYWuYMFEKbbJNjBFkz328200F85S8o1EvtViA7-Im-3J_pQp09C2aSrrZTwwU.ttf") format("truetype");font-display:swap;}
 @font-face {font-family:VT323;src:url("https://fonts.gstatic.com/s/vt323/v18/pxiKyp0ihIEF2hsY.ttf") format("truetype");font-display:swap;}
 @font-face {font-family:Pixelify;src:url("https://fonts.gstatic.com/s/pixelifysans/v3/CHy2V-3HFUT7aC4iv1TxGDR9DHEserHN25py2TQ3131Y.ttf") format("truetype");font-weight:600;font-display:swap;}
 #colorMode .appearance-options {grid-template-columns:repeat(3,minmax(0,1fr));}
@@ -525,7 +526,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
  :root[data-appearance="pixel"] :is(h1,h2,.tab) {font-family:Pixelify,ui-monospace,monospace;font-weight:600;}
  :root[data-appearance="mac"] {--ink:#181818;--paper:#d4d4ce;--white:#fafaf5;--header:#eeeeea;--green:#181818;--mint:#e3e3de;--line:#575754;--muted:#50504d;--red:#8b2630;}
  :root[data-appearance="mac"][data-theme="dark"] {--ink:#f0f0eb;--paper:#151515;--white:#252525;--header:#252525;--green:#eee;--mint:#373737;--line:#a8a8a1;--muted:#c1c1bb;--red:#ffb4b9;}
- :root[data-appearance="mac"] {--ui-typeface:Geneva,Verdana,sans-serif;}
+ :root[data-appearance="mac"] {--ui-typeface:Tiny5,Pixelify,monospace;}
  :root[data-appearance="dos"] {--ui-typeface:VT323,"Courier New",monospace;}
  :root[data-appearance="pixel"] {--ui-typeface:Pixelify,ui-monospace,monospace;}
  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) :where(body,body *):not(:where(#pdfReport,#pdfReport *,[aria-hidden="true"] .device-mark)) {
@@ -534,6 +535,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) ::placeholder {font-family:inherit;}
 
  :root[data-appearance="mac"] :is(.card,dialog,.group-menu) {border:1px solid var(--line);box-shadow:3px 3px var(--line);}
+ :root[data-appearance="mac"] :is(.primary,.tab.active) {outline:1px solid var(--green);outline-offset:2px;}
  :root[data-appearance="mac"] .card>h2 {display:flex;align-items:center;gap:.6em;}
  :root[data-appearance="mac"] .card>h2::after {content:"";flex:1;height:7px;background:repeating-linear-gradient(var(--line) 0 1px,transparent 1px 3px);}
  :root:is([data-appearance="mac"],[data-appearance="dos"],[data-appearance="pixel"]) .top h1 {color:var(--ink);}
@@ -654,7 +656,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.8.1</span>
+  <span>Verze 1.8.2</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
