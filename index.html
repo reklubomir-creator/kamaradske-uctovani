@@ -585,7 +585,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.6.2</span>
+  <span>Verze 1.6.3</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -1059,8 +1059,7 @@ expenseForm.addEventListener('submit',event=>{
   savedExpense={...state.expenses[index],...fields};
   state.expenses[index]=savedExpense;
  }else{
-  const author=state.people.find(person=>person.id===authorPreferences[activeGroupId]);
-  savedExpense={id:crypto.randomUUID(),...fields,...(author?{addedById:author.id,addedByName:author.name}:{})};
+  savedExpense={id:crypto.randomUUID(),...fields};
   state.expenses.push(savedExpense);
  }
  resetExpenseForm();
@@ -1365,8 +1364,8 @@ function rememberLocalRemovals(ids){
 
 function announceExpense(type,expense,people=state.people,canRefresh=false){
  const titles={added:'Nový výdaj',edited:'Upravený výdaj',removed:'Smazaný výdaj'};
- const author=expense.addedByName||people.find(person=>person.id===expense.addedById)?.name;
- const attribution=type==='added'&&author?'Zapsal(a) '+author+' · ':'';
+ const payerName=people.find(person=>person.id===expense.payer)?.name;
+ const attribution=type==='added'&&payerName?'Plátce: '+payerName+' · ':'';
  showNotification(type,titles[type],attribution+money(expense.amount)+' · '+expense.description,canRefresh);
 }
 function notificationSnapshot(group){

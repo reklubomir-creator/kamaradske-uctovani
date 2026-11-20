@@ -59,7 +59,7 @@ async function expenseRecord(expense, people) {
       [...(expense.participants || [])].sort(), Object.entries(expense.shares || {}).sort(),
     ])),
     amount: Number(expense.amount),
-    author: String(expense.addedByName || people.get(expense.addedById) || "").slice(0, 80),
+    payerName: String(people.get(expense.payer) || "").slice(0, 80),
     description: String(expense.description || "").trim().slice(0, 100),
   };
 }
@@ -100,7 +100,7 @@ function notificationFor(changes, subscription) {
   const title = { added: "Nový výdaj", edited: "Upravený výdaj", removed: "Smazaný výdaj", note: "Nová poznámka" }[newest.type];
   const amount = Number.isFinite(newest.entry?.amount) ? money.format(newest.entry.amount) : "";
   const singleBody = newest.type === "added"
-    ? [newest.entry.author ? "Zapsal(a) " + newest.entry.author : "Autor neuveden", newest.entry.description, amount].filter(Boolean).join(" · ")
+    ? [newest.entry.payerName ? "Plátce: " + newest.entry.payerName : "", newest.entry.description, amount].filter(Boolean).join(" · ")
     : amount || "Ve sdílené skupině je nová poznámka.";
   const others = related.length > 1 ? " (+ další změny: " + (related.length - 1) + ")" : "";
   return { title, body: singleBody + others, groupId: subscription.groupId };
