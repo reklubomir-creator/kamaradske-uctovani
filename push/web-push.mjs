@@ -61,7 +61,7 @@ export async function deliverPush(subscription, payload, vapid, appOrigin) {
   const signature = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, text.encode(unsigned));
   return fetch(endpoint, {
     method: "POST",
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(8000),
     headers: {
       "Content-Encoding": "aes128gcm",
