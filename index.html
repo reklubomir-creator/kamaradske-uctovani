@@ -15,9 +15,9 @@ try{
  const style=localStorage.getItem(styleKey);
  if(['system','dark','light'].includes(saved))mode=saved;
  else if(['dos','pixel'].includes(saved)){appearance=saved;mode='dark'}
- if(['classic','dos','pixel','mac'].includes(style))appearance=style;
+ if(['classic','dos','pixel','mac','office'].includes(style))appearance=style;
 }catch{}
-const chromeColors={classic:['#173f35','#112c24'],dos:['#e4eedb','#070d08'],pixel:['#ffeab9','#29224d'],mac:['#eeeeea','#252525']};
+const chromeColors={classic:['#173f35','#112c24'],dos:['#e4eedb','#070d08'],pixel:['#ffeab9','#29224d'],mac:['#eeeeea','#252525'],office:['#245587','#172f4e']};
 function applyAppearance(){
  const dark=mode==='dark'||(mode==='system'&&systemTheme.matches);
  document.documentElement.dataset.theme=dark?'dark':'light';
@@ -515,7 +515,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 @font-face {font-family:VT323;src:url("https://fonts.gstatic.com/s/vt323/v18/pxiKyp0ihIEF2hsY.ttf") format("truetype");font-display:swap;}
 @font-face {font-family:Pixelify;src:url("https://fonts.gstatic.com/s/pixelifysans/v3/CHy2V-3HFUT7aC4iv1TxGDR9DHEserHN25py2TQ3131Y.ttf") format("truetype");font-weight:600;font-display:swap;}
 #colorMode .appearance-options {grid-template-columns:repeat(3,minmax(0,1fr));}
-#appearance .appearance-options {grid-template-columns:repeat(4,minmax(0,1fr));}
+#appearance .appearance-options {grid-template-columns:repeat(5,minmax(0,1fr));}
 #appearance {margin-top:10px;}
 @media screen {
  :root[data-theme="light"][data-appearance="dos"] {--paper:#e4eedb;--white:#f2f7e9;--ink:#12341a;--muted:#3d5d43;--green:#245233;--mint:#d4e6cd;--line:#678769;--red:#812b29;--header:#e4eedb;}
@@ -545,6 +545,31 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
  :root[data-appearance="pixel"] button:active {transform:translateY(1px);}
  @keyframes retro-open {from{opacity:.7;transform:translateY(2px)}to{opacity:1;transform:none}}
 }
+
+@media screen {
+ :root[data-appearance="office"] {--paper:#e6edf6;--white:#f9fbff;--ink:#172b42;--muted:#4c5e72;--green:#184c80;--mint:#d8e6f6;--line:#a6bbd3;}
+ :root[data-appearance="office"][data-theme="dark"] {--paper:#101a28;--white:#1e2d41;--ink:#ebf3ff;--muted:#bbcee5;--green:#a8cef8;--mint:#2c4560;--line:#576d88;}
+ :root[data-appearance="office"] .top {background:#245587;border-bottom:4px solid #8db3dc;}
+ :root[data-appearance="office"][data-theme="dark"] .top {background:#172f4e;}
+ :root[data-appearance="office"] :is(.card,.group-toolbar,.group-menu,.tab) {border-radius:5px;border:1px solid var(--line);}
+ :root[data-appearance="office"] :is(select,input,textarea) {background-color:var(--white);}
+ .mascot-track {position:relative;height:34px;overflow:hidden;margin-bottom:8px;color:var(--green);border-bottom:1px dotted var(--line);}
+ [data-appearance="classic"] .mascot-track {display:none;}
+ .mascot {position:absolute;inset-inline-start:0;top:0;display:grid;place-items:center;width:34px;height:26px;}
+ .mascot::after {content:"";position:absolute;bottom:0;width:12px;height:4px;border-inline:2px solid currentColor;}
+ .mascot .pixel-icon {display:none;}
+ [data-appearance="dos"] .mascot::before {content:"[>_]";font:bold 13px monospace;}
+ [data-appearance="pixel"] .mascot .pixel-icon {display:block;}
+ [data-appearance="mac"] .mascot::before {content:"▣";font:bold 23px Tiny5,monospace;}
+ [data-appearance="office"] .mascot::before {content:"📎";font:20px/1 sans-serif;transform:rotate(20deg);}
+}
+@media screen and (prefers-reduced-motion:no-preference) {
+ .mascot {animation:mascot-walk 7s linear infinite alternate;}
+ .mascot::after {animation:mascot-step 330ms steps(2,end) infinite alternate;}
+ @keyframes mascot-walk {to {inset-inline-start:calc(100% - 34px);}}
+ @keyframes mascot-step {to {transform:skewX(24deg);}}
+}
+@media print {.mascot-track {display:none;}}
 </style>
 </head>
 <body>
@@ -569,6 +594,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
             <label title="MS-DOS"><input type="radio" name="appearance" value="dos" aria-label="MS-DOS"><span aria-hidden="true" class="dos-icon">&gt;_</span></label>
             <label title="8-bit"><input type="radio" name="appearance" value="pixel" aria-label="8-bit"><span aria-hidden="true"><i class="pixel-icon"></i></span></label>
 <label title="Macintosh"><input type="radio" name="appearance" value="mac" aria-label="Macintosh"><span aria-hidden="true">▣</span></label>
+<label title="MS Office"><input type="radio" name="appearance" value="office" aria-label="MS Office"><span aria-hidden="true">📎</span></label>
 </div></fieldset>
         <button class="secondary full" id="openNotifications" type="button">Nastavení upozornění</button>
         <div id="groupMenuContent" class="app-content-hidden">
@@ -614,6 +640,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
   </details>
 </section>
 <div class="group-toolbar app-content-hidden">
+  <div class="mascot-track" aria-hidden="true"><span class="mascot"><i class="pixel-icon"></i></span></div>
   <div class="field group-picker">
     <label for="groupSelect">Skupina</label>
     <select id="groupSelect"></select>
@@ -656,7 +683,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.8.2</span>
+  <span>Verze 1.9.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -992,12 +1019,12 @@ function activateGroup(id){
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 const groupActions=document.getElementById('groupSwitcher');
 const styledCopy={
- welcomeTitle:['Společné výdaje na jednom místě','C:\\ÚČTY> Přehled skupin','Společná pokladna','Kartotéka skupin'],
- continueWelcome:['Pokračovat do skupin','Otevřít adresář skupin','Vstoupit do skupiny','Otevřít skupiny'],
- joinTitle:['Připojit se ke skupině','Připojit sdílený adresář','Připojit se k týmu','Otevřít sdílenou skupinu']
+ welcomeTitle:['Společné výdaje na jednom místě','C:\\ÚČTY> Přehled skupin','Společná pokladna','Kartotéka skupin','Sešit výdajů'],
+ continueWelcome:['Pokračovat do skupin','Otevřít adresář skupin','Vstoupit do skupiny','Otevřít skupiny','Otevřít sešit'],
+ joinTitle:['Připojit se ke skupině','Připojit sdílený adresář','Připojit se k týmu','Otevřít sdílenou skupinu','Otevřít sdílený sešit']
 };
 function applyStyleCopy(){
- const index=['classic','dos','pixel','mac'].indexOf(appearance);
+ const index=['classic','dos','pixel','mac','office'].indexOf(appearance);
  for(const [id,labels] of Object.entries(styledCopy))document.getElementById(id).textContent=labels[index];
 }
 for(const [id,initial] of [['appearance',appearance],['colorMode',mode]]){
