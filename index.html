@@ -11,12 +11,13 @@ const systemTheme=matchMedia('(prefers-color-scheme: dark)');
 let appearance='system';
 try{
  const saved=localStorage.getItem(themeKey);
- if(saved==='light'||saved==='dark')appearance=saved;
+ if(['light','dark','dos','pixel'].includes(saved))appearance=saved;
 }catch{}
 function applyAppearance(){
- const dark=appearance==='dark'||(appearance==='system'&&systemTheme.matches);
+ const dark=['dark','dos','pixel'].includes(appearance)||(appearance==='system'&&systemTheme.matches);
  document.documentElement.dataset.theme=dark?'dark':'light';
- document.querySelector('meta[name="theme-color"]').content=dark?'#112c24':'#173f35';
+ document.documentElement.dataset.appearance=appearance;
+ document.querySelector('meta[name="theme-color"]').content=appearance==='dos'?'#070d08':appearance==='pixel'?'#29224d':dark?'#112c24':'#173f35';
 }
 applyAppearance();
 systemTheme.addEventListener('change',applyAppearance);
@@ -360,7 +361,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 }
 .appearance-field {margin: 0; padding: 0; border: 0;}
 .appearance-field legend {padding: 0 0 6px; color: var(--muted); font-size: .875rem; font-weight: 700;}
-.appearance-options {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;}
+.appearance-options {display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;}
 .appearance-options label {position: relative; cursor: pointer;}
 .appearance-options input {position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden;}
 .appearance-options span {
@@ -480,6 +481,30 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
     max-inline-size: 100%;
   }
 }
+
+.appearance-options .dos-icon {font: bold 19px/1 monospace;}
+.pixel-icon {width: 3px; height: 3px; background: transparent; transform: translate(-9px,-6px);
+  box-shadow: 3px 0,15px 0,6px 3px,9px 3px,12px 3px,3px 6px,9px 6px,15px 6px,0 9px,3px 9px,6px 9px,9px 9px,12px 9px,15px 9px,18px 9px,0 12px,6px 12px,12px 12px,18px 12px;}
+@media screen {
+  :root[data-appearance="dos"] {
+    --paper:#040805; --white:#09120b; --ink:#c1ffae; --muted:#97c692;
+    --green:#a7fa86; --mint:#1b3720; --line:#52834e; --red:#ffac82; --header:#070d08;
+  }
+  :root[data-appearance="pixel"] {
+    --paper:#17142d; --white:#29224d; --ink:#fff3d2; --muted:#c7c0ec;
+    --green:#ffdc73; --mint:#453865; --line:#8273b3; --red:#ff9da8; --header:#29224d;
+  }
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) body {font-family:ui-monospace,"Courier New",monospace;}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) .top {background:var(--header); color:var(--ink); border-bottom:2px solid var(--green);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.card,.stat,.tab,.group-toolbar,.group-menu,.item,.date-control,.empty,.pill,dialog,fieldset,button,input,select,textarea,.appearance-options span) {border-radius:0;}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(input,select,textarea,.date-control,.empty,.pill,.stat,.item,.card,.group-menu,dialog,.notification-popup) {background-color:var(--white);color:var(--ink);border-color:var(--line);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.secondary,.reset-box,.delete-disclosure) {background:var(--mint);color:var(--ink);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.tab.active,.primary) {background:var(--green);color:var(--paper);}
+  :root[data-appearance="dos"] :is(.card,.group-menu,dialog) {border:3px double var(--line);box-shadow:none;}
+  :root[data-appearance="pixel"] body {background-color:var(--paper);background-image:radial-gradient(#393055 1px,transparent 1px);background-size:8px 8px;}
+  :root[data-appearance="pixel"] :is(.card,.group-menu,dialog,.primary,.tab.active) {border:2px solid var(--line);box-shadow:3px 3px 0 #0b091b;}
+  :root[data-appearance="pixel"] h2 {letter-spacing:.035em;color:#83efdf;}
+}
 </style>
 </head>
 <body>
@@ -497,6 +522,8 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
             <label title="Světlý"><input type="radio" name="appearance" value="light" aria-label="Světlý"><span aria-hidden="true">☀</span></label>
             <label title="Tmavý"><input type="radio" name="appearance" value="dark" aria-label="Tmavý"><span aria-hidden="true">☾</span></label>
             <label title="Podle zařízení"><input type="radio" name="appearance" value="system" aria-label="Podle zařízení"><span aria-hidden="true"><i class="device-mark"></i></span></label>
+            <label title="MS-DOS"><input type="radio" name="appearance" value="dos" aria-label="MS-DOS"><span aria-hidden="true" class="dos-icon">&gt;_</span></label>
+            <label title="8-bit"><input type="radio" name="appearance" value="pixel" aria-label="8-bit"><span aria-hidden="true"><i class="pixel-icon"></i></span></label>
           </div>
         </fieldset>
         <button class="secondary full" id="openNotifications" type="button">Nastavení upozornění</button>
@@ -585,7 +612,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.6.4</span>
+  <span>Verze 1.7.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
