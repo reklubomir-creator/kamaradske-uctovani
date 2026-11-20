@@ -556,18 +556,31 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
  .mascot-track {position:relative;height:34px;overflow:hidden;margin-bottom:8px;color:var(--green);border-bottom:1px dotted var(--line);}
  [data-appearance="classic"] .mascot-track {display:none;}
  .mascot {position:absolute;inset-inline-start:0;top:0;display:grid;place-items:center;width:34px;height:26px;}
- .mascot::after {content:"";position:absolute;bottom:0;width:12px;height:4px;border-inline:2px solid currentColor;}
+ .mascot-body {position:relative;display:grid;place-items:center;width:100%;height:100%;padding-bottom:5px;}
+ .mascot-foot {position:absolute;bottom:1px;width:5px;height:2px;border-radius:1px;background:currentColor;}
+ .mascot-foot:nth-of-type(1) {left:12px;}
+ .mascot-foot:last-of-type {right:12px;}
  .mascot .pixel-icon {display:none;}
- [data-appearance="dos"] .mascot::before {content:"[>_]";font:bold 13px monospace;}
+ [data-appearance="dos"] .mascot-body::before {content:"[>_]";font:bold 13px monospace;}
  [data-appearance="pixel"] .mascot .pixel-icon {display:block;}
- [data-appearance="mac"] .mascot::before {content:"▣";font:bold 23px Tiny5,monospace;}
- [data-appearance="office"] .mascot::before {content:"📎";font:20px/1 sans-serif;transform:rotate(20deg);}
+ [data-appearance="mac"] .mascot-body::before {content:"▣";font:bold 23px Tiny5,monospace;}
+ [data-appearance="office"] .mascot-body::before {content:"📎";font:20px/1 sans-serif;transform:rotate(20deg);}
 }
 @media screen and (prefers-reduced-motion:no-preference) {
- .mascot {animation:mascot-walk 7s linear infinite alternate;}
- .mascot::after {animation:mascot-step 330ms steps(2,end) infinite alternate;}
- @keyframes mascot-walk {to {inset-inline-start:calc(100% - 34px);}}
- @keyframes mascot-step {to {transform:skewX(24deg);}}
+ .mascot {animation:mascot-walk 16s linear infinite;}
+ .mascot-body {animation:mascot-turn 16s steps(1,end) infinite;}
+ .mascot-foot {animation:mascot-step 640ms ease-in-out infinite;}
+ .mascot-foot:last-of-type {animation-delay:-320ms;}
+ @keyframes mascot-walk {
+   0%, 100% {inset-inline-start:0;}
+   50% {inset-inline-start:calc(100% - 34px);}
+ }
+ @keyframes mascot-turn {50%, 100% {transform:scaleX(-1);}}
+ @keyframes mascot-step {
+   0%, 100% {transform:translateX(2px);}
+   50% {transform:translateX(-2px);}
+   75% {transform:translateY(-2px);}
+ }
 }
 @media print {.mascot-track {display:none;}}
 </style>
@@ -640,7 +653,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
   </details>
 </section>
 <div class="group-toolbar app-content-hidden">
-  <div class="mascot-track" aria-hidden="true"><span class="mascot"><i class="pixel-icon"></i></span></div>
+  <div class="mascot-track" aria-hidden="true"><span class="mascot"><span class="mascot-body"><i class="pixel-icon"></i><span class="mascot-foot"></span><span class="mascot-foot"></span></span></span></div>
   <div class="field group-picker">
     <label for="groupSelect">Skupina</label>
     <select id="groupSelect"></select>
@@ -683,7 +696,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.9.1</span>
+  <span>Verze 1.9.2</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
