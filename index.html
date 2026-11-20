@@ -281,8 +281,8 @@ main.wrap{width:100%;overflow-x:clip}
 }
 #quickExpense span::after {transform: rotate(90deg);}
 #quickExpense:focus-visible {outline: 3px solid #41916d; outline-offset: 3px;}
-#expenses:not(.hidden) ~ #quickExpense {display: none;}
-main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
+#overview.hidden ~ #quickExpense {display: none;}
+main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)) {
   padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 @media print {#quickExpense {display: none;}}
@@ -585,7 +585,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.6.3</span>
+  <span>Verze 1.6.4</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
