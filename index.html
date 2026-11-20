@@ -8,16 +8,21 @@
 <script>
 const themeKey='kamaradske-uctovani-theme';
 const systemTheme=matchMedia('(prefers-color-scheme: dark)');
-let appearance='system';
+const styleKey=themeKey+'-style';
+let appearance='classic', mode='system';
 try{
  const saved=localStorage.getItem(themeKey);
- if(['light','dark','dos','pixel'].includes(saved))appearance=saved;
+ const style=localStorage.getItem(styleKey);
+ if(['system','dark','light'].includes(saved))mode=saved;
+ else if(['dos','pixel'].includes(saved)){appearance=saved;mode='dark'}
+ if(['classic','dos','pixel','mac'].includes(style))appearance=style;
 }catch{}
+const chromeColors={classic:['#173f35','#112c24'],dos:['#e4eedb','#070d08'],pixel:['#ffeab9','#29224d'],mac:['#eeeeea','#252525']};
 function applyAppearance(){
- const dark=['dark','dos','pixel'].includes(appearance)||(appearance==='system'&&systemTheme.matches);
+ const dark=mode==='dark'||(mode==='system'&&systemTheme.matches);
  document.documentElement.dataset.theme=dark?'dark':'light';
  document.documentElement.dataset.appearance=appearance;
- document.querySelector('meta[name="theme-color"]').content=appearance==='dos'?'#070d08':appearance==='pixel'?'#29224d':dark?'#112c24':'#173f35';
+ document.querySelector('meta[name="theme-color"]').content=chromeColors[appearance][Number(dark)];
 }
 applyAppearance();
 systemTheme.addEventListener('change',applyAppearance);
@@ -494,16 +499,42 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
     --paper:#17142d; --white:#29224d; --ink:#fff3d2; --muted:#c7c0ec;
     --green:#ffdc73; --mint:#453865; --line:#8273b3; --red:#ff9da8; --header:#29224d;
   }
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) body {font-family:ui-monospace,"Courier New",monospace;}
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) .top {background:var(--header); color:var(--ink); border-bottom:2px solid var(--green);}
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.card,.stat,.tab,.group-toolbar,.group-menu,.item,.date-control,.empty,.pill,dialog,fieldset,button,input,select,textarea,.appearance-options span) {border-radius:0;}
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(input,select,textarea,.date-control,.empty,.pill,.stat,.item,.card,.group-menu,dialog,.notification-popup) {background-color:var(--white);color:var(--ink);border-color:var(--line);}
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.secondary,.reset-box,.delete-disclosure) {background:var(--mint);color:var(--ink);}
-  :root:is([data-appearance="dos"],[data-appearance="pixel"]) :is(.tab.active,.primary) {background:var(--green);color:var(--paper);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) body {font-family:ui-monospace,"Courier New",monospace;}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) .top {background:var(--header); color:var(--ink); border-bottom:2px solid var(--green);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) :is(.card,.stat,.tab,.group-toolbar,.group-menu,.item,.date-control,.empty,.pill,dialog,fieldset,button,input,select,textarea,.appearance-options span) {border-radius:0;}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) :is(input,select,textarea,.date-control,.empty,.pill,.stat,.item,.card,.group-menu,dialog,.notification-popup) {background-color:var(--white);color:var(--ink);border-color:var(--line);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) :is(.secondary,.reset-box,.delete-disclosure) {background:var(--mint);color:var(--ink);}
+  :root:is([data-appearance="dos"],[data-appearance="pixel"],[data-appearance="mac"]) :is(.tab.active,.primary) {background:var(--green);color:var(--paper);}
   :root[data-appearance="dos"] :is(.card,.group-menu,dialog) {border:3px double var(--line);box-shadow:none;}
   :root[data-appearance="pixel"] body {background-color:var(--paper);background-image:radial-gradient(#393055 1px,transparent 1px);background-size:8px 8px;}
   :root[data-appearance="pixel"] :is(.card,.group-menu,dialog,.primary,.tab.active) {border:2px solid var(--line);box-shadow:3px 3px 0 #0b091b;}
   :root[data-appearance="pixel"] h2 {letter-spacing:.035em;color:#83efdf;}
+}
+
+@font-face {font-family:VT323;src:url("https://fonts.gstatic.com/s/vt323/v18/pxiKyp0ihIEF2hsY.ttf") format("truetype");font-display:swap;}
+@font-face {font-family:Pixelify;src:url("https://fonts.gstatic.com/s/pixelifysans/v3/CHy2V-3HFUT7aC4iv1TxGDR9DHEserHN25py2TQ3131Y.ttf") format("truetype");font-weight:600;font-display:swap;}
+#colorMode .appearance-options {grid-template-columns:repeat(3,minmax(0,1fr));}
+#appearance .appearance-options {grid-template-columns:repeat(4,minmax(0,1fr));}
+#appearance {margin-top:10px;}
+@media screen {
+ :root[data-theme="light"][data-appearance="dos"] {--paper:#e4eedb;--white:#f2f7e9;--ink:#12341a;--muted:#3d5d43;--green:#245233;--mint:#d4e6cd;--line:#678769;--red:#812b29;--header:#e4eedb;}
+ :root[data-theme="light"][data-appearance="pixel"] {--paper:#fff4da;--white:#fffaf0;--ink:#312048;--muted:#604c72;--green:#54348b;--mint:#e9dff9;--line:#87759e;--red:#a51b3e;--header:#ffeab9;}
+ :root[data-theme="light"][data-appearance="pixel"] h2 {color:#503381;}
+ :root[data-theme="light"][data-appearance="pixel"] body {background-image:radial-gradient(#decdaa 1px,transparent 1px);}
+ :root[data-appearance="dos"] :is(h1,h2,.tab) {font-family:VT323,"Courier New",monospace;font-weight:400;letter-spacing:.025em;}
+ :root[data-appearance="pixel"] :is(h1,h2,.tab) {font-family:Pixelify,ui-monospace,monospace;font-weight:600;}
+ :root[data-appearance="mac"] {--ink:#181818;--paper:#d4d4ce;--white:#fafaf5;--header:#eeeeea;--green:#181818;--mint:#e3e3de;--line:#575754;--muted:#50504d;--red:#8b2630;}
+ :root[data-appearance="mac"][data-theme="dark"] {--ink:#f0f0eb;--paper:#151515;--white:#252525;--header:#252525;--green:#eee;--mint:#373737;--line:#a8a8a1;--muted:#c1c1bb;--red:#ffb4b9;}
+ :root[data-appearance="mac"] body {font-family:Geneva,Verdana,sans-serif;}
+ :root[data-appearance="mac"] :is(.card,dialog,.group-menu) {border:1px solid var(--line);box-shadow:3px 3px var(--line);}
+ :root[data-appearance="mac"] .card>h2 {display:flex;align-items:center;gap:.6em;}
+ :root[data-appearance="mac"] .card>h2::after {content:"";flex:1;height:7px;background:repeating-linear-gradient(var(--line) 0 1px,transparent 1px 3px);}
+ :root:is([data-appearance="mac"],[data-appearance="dos"],[data-appearance="pixel"]) .top h1 {color:var(--ink);}
+}
+@media screen and (prefers-reduced-motion:no-preference) {
+ :root:is([data-appearance="mac"],[data-appearance="dos"],[data-appearance="pixel"]) .panel:not(.hidden):not(.app-content-hidden) {animation:retro-open 140ms ease-out;}
+ :root[data-appearance="pixel"] button:active {transform:translateY(1px);}
+ @keyframes retro-open {from{opacity:.7;transform:translateY(2px)}to{opacity:1;transform:none}}
 }
 </style>
 </head>
@@ -516,16 +547,20 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
         <span class="logo-menu-mark" aria-hidden="true"></span>
       </summary>
       <div class="group-menu">
-        <fieldset class="appearance-field" id="appearance">
-          <legend>Vzhled</legend>
+        <fieldset class="appearance-field" id="colorMode">
+          <legend>Barevný režim</legend>
           <div class="appearance-options">
-            <label title="Světlý"><input type="radio" name="appearance" value="light" aria-label="Světlý"><span aria-hidden="true">☀</span></label>
-            <label title="Tmavý"><input type="radio" name="appearance" value="dark" aria-label="Tmavý"><span aria-hidden="true">☾</span></label>
-            <label title="Podle zařízení"><input type="radio" name="appearance" value="system" aria-label="Podle zařízení"><span aria-hidden="true"><i class="device-mark"></i></span></label>
-            <label title="MS-DOS"><input type="radio" name="appearance" value="dos" aria-label="MS-DOS"><span aria-hidden="true" class="dos-icon">&gt;_</span></label>
-            <label title="8-bit"><input type="radio" name="appearance" value="pixel" aria-label="8-bit"><span aria-hidden="true"><i class="pixel-icon"></i></span></label>
+            <label title="Světlý"><input type="radio" name="colorMode" value="light" aria-label="Světlý"><span aria-hidden="true">☀</span></label>
+            <label title="Tmavý"><input type="radio" name="colorMode" value="dark" aria-label="Tmavý"><span aria-hidden="true">☾</span></label>
+            <label title="Podle zařízení"><input type="radio" name="colorMode" value="system" aria-label="Podle zařízení"><span aria-hidden="true"><i class="device-mark"></i></span></label>
           </div>
         </fieldset>
+<fieldset class="appearance-field" id="appearance"><legend>Styl rozhraní</legend><div class="appearance-options">
+<label title="Klasický"><input type="radio" name="appearance" value="classic" aria-label="Klasický"><span aria-hidden="true">◈</span></label>
+            <label title="MS-DOS"><input type="radio" name="appearance" value="dos" aria-label="MS-DOS"><span aria-hidden="true" class="dos-icon">&gt;_</span></label>
+            <label title="8-bit"><input type="radio" name="appearance" value="pixel" aria-label="8-bit"><span aria-hidden="true"><i class="pixel-icon"></i></span></label>
+<label title="Macintosh"><input type="radio" name="appearance" value="mac" aria-label="Macintosh"><span aria-hidden="true">▣</span></label>
+</div></fieldset>
         <button class="secondary full" id="openNotifications" type="button">Nastavení upozornění</button>
         <div id="groupMenuContent" class="app-content-hidden">
           <div class="row">
@@ -612,7 +647,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.7.0</span>
+  <span>Verze 1.8.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -947,13 +982,26 @@ function activateGroup(id){
 }
 document.getElementById('groupSelect').addEventListener('change',e=>activateGroup(e.target.value));
 const groupActions=document.getElementById('groupSwitcher');
-const appearanceOptions=document.getElementById('appearance');
-for(const choice of appearanceOptions.querySelectorAll('input'))choice.checked=choice.value===appearance;
-appearanceOptions.addEventListener('change',event=>{
- appearance=event.target.value;
- applyAppearance();
- try{localStorage.setItem(themeKey,appearance)}catch{}
-});
+const styledCopy={
+ welcomeTitle:['Společné výdaje na jednom místě','C:\\ÚČTY> Přehled skupin','Společná pokladna','Kartotéka skupin'],
+ continueWelcome:['Pokračovat do skupin','Otevřít adresář skupin','Vstoupit do skupiny','Otevřít skupiny'],
+ joinTitle:['Připojit se ke skupině','Připojit sdílený adresář','Připojit se k týmu','Otevřít sdílenou skupinu']
+};
+function applyStyleCopy(){
+ const index=['classic','dos','pixel','mac'].indexOf(appearance);
+ for(const [id,labels] of Object.entries(styledCopy))document.getElementById(id).textContent=labels[index];
+}
+for(const [id,initial] of [['appearance',appearance],['colorMode',mode]]){
+ const controls=document.getElementById(id);
+ for(const choice of controls.querySelectorAll('input'))choice.checked=choice.value===initial;
+ controls.addEventListener('change',event=>{
+  if(id==='appearance')appearance=event.target.value;
+  else mode=event.target.value;
+  applyAppearance();applyStyleCopy();
+  try{localStorage.setItem(styleKey,appearance);localStorage.setItem(themeKey,mode)}catch{}
+ });
+}
+applyStyleCopy();
 document.addEventListener('click',event=>{
  if(groupActions.open&&!groupActions.contains(event.target))groupActions.open=false;
 });
