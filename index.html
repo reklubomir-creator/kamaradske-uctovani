@@ -418,17 +418,32 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 #pdfReport {color-scheme: light;}
 
 #openNotifications {margin-top: 10px;}
-.expense-date {min-width: 0;}
-#expenseForm input[type="date"] {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  inline-size: 100%;
+.expense-date .date-control {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
   min-width: 0;
-  min-inline-size: 0;
-  max-width: 100%;
+  overflow: hidden;
+  padding-inline: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface, white);
 }
-#expenseForm input[type="date"]::-webkit-date-and-time-value {min-width: 0; text-align: left;}
+[data-theme="dark"] .date-control {background: #12231b;}
+.date-control:focus-within {outline: 2px solid var(--green);}
+#expenseForm #date {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-sizing: border-box;
+}
+#date::-webkit-date-and-time-value {text-align: left;}
 #notificationsDialog {width: min(440px, calc(100% - 32px));}
 #notificationEvents {margin: 12px 0 16px; padding: 0 10px 8px; border: 1px solid var(--line); border-radius: 10px;}
 #notificationEvents:disabled {opacity: .62;}
@@ -551,7 +566,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
   <p class="muted">Pro uložení výdaje přidej alespoň jednoho člena skupiny.</p>
   <button id="expenseAddMember" class="secondary" type="button">Přidat člena</button>
 </div><form id="expenseForm"><div class="field"><label for="description">Za co se platilo?</label><input id="description" required maxlength="100" placeholder="Např. nákup na víkend"></div><div class="row"><div class="field"><label for="amount">Částka (Kč)</label><input id="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="850"></div><div class="field"><label for="payer">Kdo zaplatil?</label><select id="payer" required></select></div></div>
-<div class="field expense-date"><label for="date">Datum</label><input id="date" type="date" required></div>
+<div class="field expense-date"><label for="date">Datum</label><span class="date-control"><input id="date" type="date" required></span></div>
 <div class="field"><label>Rozdělit mezi členy</label><div id="participants" class="list"></div><p class="muted">Výchozí podíl každého člena se nastavuje v záložce Členové. Tady ho můžeš změnit jen pro tento výdaj.</p></div><p id="expenseError" class="form-error hidden" role="alert"></p>
 <div class="expense-form-actions">
   <button class="primary full" id="saveExpense" type="submit">Uložit výdaj</button>
@@ -562,7 +577,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.6.0</span>
+  <span>Verze 1.6.1</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>

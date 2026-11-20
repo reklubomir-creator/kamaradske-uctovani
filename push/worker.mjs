@@ -52,22 +52,24 @@ async function readGroup(token) {
   return result.ok && result.group ? result.group.data || {} : null;
 }
 
-async function expenseRecord(expense) {
+async function expenseRecord(expense, people) {
   return {
     fingerprint: await digest(JSON.stringify([
       expense.description, Number(expense.amount), expense.payer, expense.date,
       [...(expense.participants || [])].sort(), Object.entries(expense.shares || {}).sort(),
     ])),
     amount: Number(expense.amount),
-    author: String(expense.addedByName || "").slice(0, 80),
+    author: String(expense.addedByName || people.get(expense.addedById) || "").slice(0, 80),
+    description: String(expense.description || "").trim().slice(0, 100),
   };
 }
 
 async function snapshot(group) {
+  const people = new Map((group.people || []).map(person => [person.id, person.name]));
   return {
     expenses: Object.fromEntries(await Promise.all((Array.isArray(group.expenses) ? group.expenses : [])
       .filter(expense => expense && typeof expense.id === "string")
-      .map(async expense => [expense.id, await expenseRecord(expense)]))),
+      .map(async expense => [expense.id, await expenseRecord(expense, people)]))),
     notes: (Array.isArray(group.notes) ? group.notes : [])
       .filter(note => note && typeof note.id === "string").map(note => note.id),
   };
@@ -98,7 +100,7 @@ function notificationFor(changes, subscription) {
   const title = { added: "Nový výdaj", edited: "Upravený výdaj", removed: "Smazaný výdaj", note: "Nová poznámka" }[newest.type];
   const amount = Number.isFinite(newest.entry?.amount) ? money.format(newest.entry.amount) : "";
   const singleBody = newest.type === "added"
-    ? [newest.entry.author ? "Zapsal(a) " + newest.entry.author : "", amount].filter(Boolean).join(" · ")
+    ? [newest.entry.author ? "Zapsal(a) " + newest.entry.author : "Autor neuveden", newest.entry.description, amount].filter(Boolean).join(" · ")
     : amount || "Ve sdílené skupině je nová poznámka.";
   const others = related.length > 1 ? " (+ další změny: " + (related.length - 1) + ")" : "";
   return { title, body: singleBody + others, groupId: subscription.groupId };
