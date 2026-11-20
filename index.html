@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#173f35">
 <script>
@@ -472,6 +472,14 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 #notificationRefresh {margin-top: 8px; padding: 6px 10px; min-height: 36px;}
 #notificationDismiss {font-size: 22px; line-height: 1; min-width: 44px; min-height: 44px;}
 [hidden] {display: none !important;}
+@media screen and (pointer: coarse) {
+  html {-webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    font-size: max(16px, 1rem) !important;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -577,7 +585,7 @@ main.wrap:has(#expenses.hidden):has(#quickExpense:not(.app-content-hidden)) {
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.6.1</span>
+  <span>Verze 1.6.2</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
