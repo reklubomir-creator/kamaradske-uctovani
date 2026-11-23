@@ -170,7 +170,7 @@ export class PushStore {
           changed.name = change.after;
           continue;
         }
-        if (!["people","expenses","notes"].includes(change.field) || typeof change.id !== "string") return json({error: "Invalid change"}, 400);
+        if (!["people","expenses","notes","archive"].includes(change.field) || typeof change.id !== "string") return json({error: "Invalid change"}, 400);
         const records = changed[change.field] ||= [];
         const index = records.findIndex(item => item.id === change.id);
         const prior = records[index] ?? null;
