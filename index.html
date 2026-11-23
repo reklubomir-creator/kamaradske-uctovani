@@ -713,7 +713,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.10.2</span>
+  <span>Verze 1.11.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -759,6 +759,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
   <div class="field"><label for="inviteLink">Odkaz</label><input id="inviteLink" readonly></div>
   <button class="secondary full" id="copyInviteLink" type="button">Kopírovat odkaz</button>
   <div class="field" style="margin-top:12px"><label for="inviteCode">Kód skupiny</label><input id="inviteCode" readonly></div>
+  <p class="muted" id="inviteCodeHint"></p>
   <button class="secondary full" id="copyInviteCode" type="button">Kopírovat kód</button>
   <p class="muted" id="copyInviteStatus" role="status"></p>
   <button class="install-help-link" type="button" data-install-help>Jak propojit skupiny s aplikací na ploše?</button>
@@ -812,6 +813,16 @@ function shareLink(token){
  const url=new URL('./',location.href);
  url.hash=new URLSearchParams({group:token}).toString();
  return url.href;
+}
+async function requestGroupInvite(action, payload){
+ const response=await fetch('https://kamaradske-uctovani-push.rek-lubomir.workers.dev/invite-'+action,{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),
+  signal:AbortSignal.timeout(15000)
+ });
+ if(response.status===429)throw new Error('Příliš mnoho pokusů. Zkus to za minutu.');
+ if(action==='resolve'&&response.status===404)throw new Error('Kód neexistuje nebo vypršel.');
+ if(!response.ok)throw new Error('Služba krátkých kódů je dočasně nedostupná.');
+ return response.json();
 }
 function parseInvite(value){
  const input=value.trim();
@@ -1703,9 +1714,23 @@ document.getElementById('shareGroup').addEventListener('click',async event=>{
   }
   document.getElementById('inviteTitle').textContent='Sdílet skupinu „'+group.name+'“';
   document.getElementById('inviteLink').value=shareLink(token);
-  document.getElementById('inviteCode').value=token;
+  const codeInput=document.getElementById('inviteCode');
+  const codeHint=document.getElementById('inviteCodeHint');
+  const copyCode=document.getElementById('copyInviteCode');
+  codeInput.value='';
+  copyCode.disabled=true;
+  codeHint.textContent='Vytvářím krátký kód…';
   document.getElementById('copyInviteStatus').textContent='';
   inviteDialog.showModal();
+  try{
+   const {code,expiresAt}=await requestGroupInvite('issue',{token});
+   codeInput.value=code;
+   copyCode.disabled=false;
+   const until=new Date(expiresAt).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
+   codeHint.textContent='Krátký kód platí do '+until+'. Odkaz platí dál.';
+  }catch{
+   codeHint.textContent='Krátký kód teď není dostupný. Použij pozvánkový odkaz.';
+  }
  }catch(err){
   setSyncStatus('Sdílení se nepodařilo: '+err.message);
   alert('Skupinu se nepodařilo sdílet. '+err.message);
@@ -1753,7 +1778,15 @@ async function joinGroup(token){
  joinSubmit.disabled=true;
  closeJoin.disabled=true;
  joinStatus.textContent='Načítám skupinu…';
- try{await loadSharedGroup(token);joinDialog.close()}
+ try{
+  if(/^[A-Za-z0-9]{5}$/.test(token)){
+   const code=token.toUpperCase();
+   if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{5}$/.test(code))throw new Error('Kód obsahuje neplatný znak.');
+   ({token}=await requestGroupInvite('resolve',{code}));
+  }
+  await loadSharedGroup(token);
+  joinDialog.close();
+ }
  catch(err){joinStatus.textContent='Připojení se nepodařilo. '+err.message}
  finally{joinSubmit.disabled=false;closeJoin.disabled=false}
 }
