@@ -713,7 +713,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.10.1</span>
+  <span>Verze 1.10.2</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -1320,10 +1320,27 @@ function renderGroupArchive(){
   const total=entry.expenses.reduce((sum,expense)=>sum+Number(expense.amount),0);
   const expenses=entry.expenses.map(expense=>'<div class="item"><div><div class="item-title">'+esc(expense.description)+'</div><div class="muted">'+esc([people.get(expense.payer),archiveDay(expense.date)&&formatArchiveDay(archiveDay(expense.date))].filter(Boolean).join(' · '))+'</div></div><strong class="amount">'+money(expense.amount)+'</strong></div>').join('');
   const notes=entry.notes.map(note=>'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(note.text)+'</p>').join('');
-  return '<details class="delete-disclosure" data-archive-id="'+esc(entry.id)+'"'+(open.has(entry.id)?' open':'')+'><summary>'+esc(period)+' · '+money(total)+'</summary><div class="delete-disclosure-content"><p class="muted">'+esc(period)+' · Uzavřeno '+formatArchiveDay(archiveDay(entry.closedAt))+'</p><h3>Členové a jejich podíly</h3>'+(members||'<p class="muted">Žádní členové.</p>')+'<h3>Navržené platby</h3>'+(payments||'<p class="muted">Není co vyrovnávat.</p>')+'<h3>Výdaje</h3>'+(expenses||'<p class="muted">Žádné výdaje.</p>')+'<h3>Poznámky</h3>'+(notes||'<p class="muted">Žádné poznámky.</p>')+'</div></details>';
+  return '<details class="delete-disclosure" data-archive-id="'+esc(entry.id)+'"'+(open.has(entry.id)?' open':'')+'><summary>'+(entry.title?esc(entry.title)+' · ':'')+esc(period)+' · '+money(total)+'</summary><div class="delete-disclosure-content"><p class="muted">'+esc(period)+' · Uzavřeno '+formatArchiveDay(archiveDay(entry.closedAt))+'</p><button class="secondary" type="button" data-rename-archive>Přejmenovat</button><h3>Členové a jejich podíly</h3>'+(members||'<p class="muted">Žádní členové.</p>')+'<h3>Navržené platby</h3>'+(payments||'<p class="muted">Není co vyrovnávat.</p>')+'<h3>Výdaje</h3>'+(expenses||'<p class="muted">Žádné výdaje.</p>')+'<h3>Poznámky</h3>'+(notes||'<p class="muted">Žádné poznámky.</p>')+'</div></details>';
  }).join('')||'<p class="muted">Zatím tu nejsou žádná uzavřená období.</p>';
  document.getElementById('clearExpensesAndNotes').disabled=!state.expenses.length&&!state.notes.length;
 }
+document.getElementById('archiveEntries').addEventListener('click',event=>{
+ const button=event.target.closest('[data-rename-archive]');
+ if(!button)return;
+ const id=button.closest('[data-archive-id]').dataset.archiveId;
+ const entry=state.archive.find(period=>period.id===id);
+ if(!entry)return;
+ const input=prompt('Název období (prázdný název zobrazí jen datum od–do)',entry.title||'');
+ if(input===null)return;
+ const title=input.trim().slice(0,100);
+ if(title===(entry.title||''))return;
+ if(title)entry.title=title;
+ else delete entry.title;
+ save();
+ const updatedButton=[...document.querySelectorAll('#archiveEntries [data-rename-archive]')]
+  .find(item=>item.closest('[data-archive-id]').dataset.archiveId===id);
+ updatedButton?.focus();
+});
 document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
  if(!state.expenses.length&&!state.notes.length)return;
  if(!confirm('Uložit všechny výdaje a poznámky do archivu a začít nové období?'))return;
