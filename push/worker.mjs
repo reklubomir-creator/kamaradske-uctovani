@@ -1,6 +1,10 @@
 import { createVapidKey, decode64, deliverPush, digest } from "./web-push.mjs";
 
 const GROUPS_API = "https://script.google.com/macros/s/AKfycbxwZ3znGm_yQVV8YFCoSb_hPn8iz_GqYBt2N4OuBk6oSUd4wFTQgXPCXKVr3JQsZ8AFYg/exec";
+const INVITE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const INVITE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{5}$/;
+const INVITE_LIFETIME = 30 * 60 * 1000;
+
 const EVENT_TYPES = ["added", "edited", "removed", "note"];
 const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK" });
 
@@ -159,6 +163,40 @@ export class PushStore {
       return json(key);
     }
     const data = await request.json();
+    if (path === "/invite-limit") {
+      const window = Math.floor(Date.now() / 60000);
+      const previous = await this.storage.get("attempts");
+      const count = previous?.window === window ? previous.count : 0;
+      if (count >= 8) return json({error: "Too many attempts"}, 429);
+      await this.storage.put("attempts", {window, count: count + 1});
+      return json({ok: true});
+    }
+    if (path === "/invite-issue") {
+      const previous = await this.storage.get("group:" + data.groupId);
+      if (previous && previous.expiresAt > Date.now()) return json(previous);
+      for (let attempt = 0; attempt < 16; attempt++) {
+        const random = crypto.getRandomValues(new Uint8Array(5));
+        const code = Array.from(random, byte => INVITE_ALPHABET[byte & 31]).join("");
+        const key = "code:" + code;
+        const existing = await this.storage.get(key);
+        if (existing && existing.expiresAt > Date.now()) continue;
+        const expiresAt = Date.now() + INVITE_LIFETIME;
+        const invite = {code, expiresAt};
+        if (previous) {
+          const oldKey = "code:" + previous.code;
+          const old = await this.storage.get(oldKey);
+          if (old?.token === data.token) await this.storage.delete(oldKey);
+        }
+        await this.storage.put({[key]: {token: data.token, expiresAt}, ["group:" + data.groupId]: invite});
+        return json(invite);
+      }
+      return json({error: "Cannot allocate code"}, 503);
+    }
+    if (path === "/invite-resolve") {
+      const invite = await this.storage.get("code:" + data.code);
+      if (!invite || invite.expiresAt <= Date.now()) return json({error: "Invalid or expired code"}, 404);
+      return json({token: invite.token});
+    }
     if (path === "/merge") {
       const current = await readGroup(data.token);
       if (!current) return json({error: "Group not found"}, 404);
@@ -257,10 +295,27 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     try {
       if (path === "/config" && request.method === "GET") return reply({ publicKey: (await getKey(env)).publicKey });
-      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/test-status", "/sync", "/merge"].includes(path)) return reply({ error: "Not found" }, 404);
+      if (request.method !== "POST" || !["/subscribe", "/unsubscribe", "/test", "/test-status", "/sync", "/merge", "/invite-issue", "/invite-resolve"].includes(path)) return reply({ error: "Not found" }, 404);
       let data;
       try { data = await boundedJson(request, path === "/merge" ? 1024 * 1024 : 8192); }
       catch { return reply({ error: "Invalid body" }, 400); }
+      if (path === "/invite-issue" || path === "/invite-resolve") {
+        if (!data || typeof data !== "object") return reply({error: "Invalid body"}, 400);
+        if (path === "/invite-resolve") {
+          if (typeof data.code !== "string" || !INVITE_PATTERN.test(data.code)) return reply({error: "Invalid code"}, 400);
+          const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+          const limiter = env.PUSH_STORE.get(env.PUSH_STORE.idFromName("invite-limit:" + await digest(ip)));
+          const allowed = await limiter.fetch("https://internal/invite-limit", {method:"POST", body:"{}"});
+          if (!allowed.ok) return reply({error: "Too many attempts"}, 429);
+        } else {
+          if (typeof data.token !== "string" || !/^[A-Za-z0-9_-]{20,128}$/.test(data.token)) return reply({error: "Invalid group"}, 400);
+          if (!await readGroup(data.token)) return reply({error: "Group not found"}, 404);
+          data.groupId = await digest(data.token);
+        }
+        const directory = env.PUSH_STORE.get(env.PUSH_STORE.idFromName("group-invite-directory-v1"));
+        const result = await directory.fetch("https://internal" + path, {method:"POST", body:JSON.stringify(data)});
+        return reply(await result.json(), result.status);
+      }
       if (!data || typeof data.token !== "string" || !/^[A-Za-z0-9_-]{20,128}$/.test(data.token)) return reply({ error: "Invalid group" }, 400);
       if (path === "/subscribe" && (
         !validSubscription(data.subscription) || typeof data.groupId !== "string" || !/^[\w-]{1,80}$/.test(data.groupId)
