@@ -686,6 +686,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <div class="card overview-notes"><h2>Poznámky na příště</h2><div id="groupNotesList" class="list"></div><form id="groupNoteForm" style="margin-top:12px"><div class="field" style="margin-bottom:8px"><label for="groupNoteInput">Nová poznámka</label><textarea id="groupNoteInput" rows="2" maxlength="1000" placeholder="Např. koupit uhlí, vyřešit doplatek…" style="width:100%;border:1px solid #d6e0da;border-radius:10px;padding:11px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div><button class="primary" type="submit">Přidat poznámku</button></form></div>
 <div class="grid"><div class="card"><h2>Kdo komu zaplatí</h2><div id="settlements" class="list"></div></div><div class="card"><h2>Bilance členů</h2><div id="balances" class="list"></div></div></div>
 <div class="overview-actions">
+  <details class="delete-disclosure" id="groupArchive"><summary>Archiv období</summary><div id="archiveEntries" class="list"></div></details>
   <details class="delete-disclosure">
     <summary>Export přehledu</summary>
     <div class="compact-actions">
@@ -693,7 +694,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
       <button class="secondary" id="exportImage" type="button">Obrázek PNG</button>
     </div>
   </details>
-  <details class="delete-disclosure"><summary>Mazání dat</summary><div class="delete-disclosure-content"><div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Odstraní všechny výdaje a všechny poznámky. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Smazat částky a poznámky</button></div></div></details>
+  <details class="delete-disclosure"><summary>Mazání dat</summary><div class="delete-disclosure-content"><div class="reset-box"><div><strong>Smazat pouze částky</strong><p class="muted">Odstraní všechny výdaje a vyrovnání. Poznámky, název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpenses" type="button">Smazat částky</button></div><div class="reset-box"><div><strong>Smazat částky i poznámky</strong><p class="muted">Přesune všechny výdaje a poznámky do archivu období. Název skupiny, členové a jejich nastavené podíly zůstanou zachovány.</p></div><button class="danger" id="clearExpensesAndNotes" type="button">Uložit do archivu a vyčistit</button></div></div></details>
 </div>
 </section>
 <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
@@ -712,7 +713,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.9.4</span>
+  <span>Verze 1.10.0</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -872,7 +873,7 @@ function postRemote(token,data){
   document.body.append(iframe,form);
  });
 }
-const groupSnapshot=g=>structuredClone({name:g.name,people:g.people,expenses:g.expenses,notes:g.notes||[]});
+const groupSnapshot=g=>structuredClone({name:g.name,people:g.people,expenses:g.expenses,notes:g.notes||[],archive:g.archive||[]});
 const renderedGroups=new Map();
 const pendingEdits=database.pendingEdits ||= {};
 let localRevision=0;
@@ -880,9 +881,9 @@ function syncRemote(token,group,base){
  if(!token||!base)return;
  const changes=[];
  if(base.name!==group.name)changes.push({field:'name',before:base.name,after:group.name});
- for(const field of ['people','expenses','notes']){
-  const before=new Map(base[field].map(row=>[row.id,row]));
-  const after=new Map(group[field].map(row=>[row.id,row]));
+ for(const field of ['people','expenses','notes','archive']){
+  const before=new Map((base[field]||[]).map(row=>[row.id,row]));
+  const after=new Map((group[field]||[]).map(row=>[row.id,row]));
   for(const id of new Set([...before.keys(),...after.keys()])){
    const prev=before.get(id)??null,next=after.get(id)??null;
    if(JSON.stringify(prev)!==JSON.stringify(next))changes.push({field,id,before:prev,after:structuredClone(next)});
@@ -943,7 +944,8 @@ const sorted=[...state.expenses].sort((a,b)=>String(b.date||'').localeCompare(St
  memberIdentity.innerHTML='<option value="">Neuvádět jméno</option>'+sortedPeople().map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
  memberIdentity.value=state.people.some(p=>p.id===authorPreferences[activeGroupId])?authorPreferences[activeGroupId]:'';
 document.getElementById('peopleList').innerHTML=state.people.length?'<p class="muted">Nastav výchozí podíl člena (např. 4 pro čtyřčlennou rodinu, 3 pro tříčlennou). U každé platby ho lze individuálně upravit. Pokud už má člen výdaje, odebrání není možné.</p>'+sortedPeople().map(p=>'<div class="item"><div style="min-width:0"><div class="item-title">'+esc(p.name)+'</div><div class="muted">Výchozí podíl</div></div><div class="person-share"><input class="share-input" type="text" inputmode="decimal" value="'+(Number(p.share)>0?Number(p.share):1)+'" aria-label="Výchozí podíl člena '+esc(p.name)+'" data-person-share="'+esc(p.id)+'"><button class="danger" data-remove-person="'+esc(p.id)+'">Odebrat</button></div></div>').join(''):'<div class="empty">Zatím žádní členové.</div>';
-renderedGroups.set(state.id,groupSnapshot(state));
+renderGroupArchive();
+ renderedGroups.set(state.id,groupSnapshot(state));
  renderExpensePeople();
  document.getElementById('refreshSharedGroup').hidden=!remoteToken;
 }
@@ -1199,7 +1201,7 @@ expenseForm.addEventListener('submit',event=>{
   savedExpense={...state.expenses[index],...fields};
   state.expenses[index]=savedExpense;
  }else{
-  savedExpense={id:crypto.randomUUID(),...fields};
+  savedExpense={id:crypto.randomUUID(),createdAt:new Date().toISOString(),...fields};
   state.expenses.push(savedExpense);
  }
  resetExpenseForm();
@@ -1288,14 +1290,46 @@ document.getElementById('clearExpenses').addEventListener('click',()=>{
  save();
  alert('Částky byly smazány. Poznámky, název skupiny, členové i jejich podíly zůstaly zachovány.');
 });
+function archiveDay(value){
+ if(typeof value!=='string')return '';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(value))return value;
+ const date=new Date(value);
+ if(!Number.isFinite(date.getTime()))return '';
+ const local=new Date(date.getTime()-date.getTimezoneOffset()*60000);
+ return local.toISOString().slice(0,10);
+}
+function formatArchiveDay(day){
+ return day.split('-').reverse().map(Number).join('. ');
+}
+function renderGroupArchive(){
+ const list=document.getElementById('archiveEntries');
+ const entries=Array.isArray(state.archive)?state.archive:[];
+ const open=new Set([...list.querySelectorAll('details[open]')].map(item=>item.dataset.archiveId));
+ list.innerHTML=[...entries].reverse().map(entry=>{
+  const dates=[entry.from,entry.to].filter(Boolean).map(formatArchiveDay);
+  const period=dates.length===2?'Od '+dates[0]+' do '+dates[1]:'Datum zápisu není dostupné';
+  const people=new Map(entry.people.map(person=>[person.id,person.name]));
+  const total=entry.expenses.reduce((sum,expense)=>sum+Number(expense.amount),0);
+  const expenses=entry.expenses.map(expense=>'<div class="item"><div><div class="item-title">'+esc(expense.description)+'</div><div class="muted">'+esc([people.get(expense.payer),archiveDay(expense.date)&&formatArchiveDay(archiveDay(expense.date))].filter(Boolean).join(' · '))+'</div></div><strong class="amount">'+money(expense.amount)+'</strong></div>').join('');
+  const notes=entry.notes.map(note=>'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(note.text)+'</p>').join('');
+  return '<details class="delete-disclosure" data-archive-id="'+esc(entry.id)+'"'+(open.has(entry.id)?' open':'')+'><summary>'+esc(period)+' · '+money(total)+'</summary><div class="delete-disclosure-content"><p class="muted">'+esc(period)+' · Uzavřeno '+formatArchiveDay(archiveDay(entry.closedAt))+'</p><h3>Výdaje</h3>'+(expenses||'<p class="muted">Žádné výdaje.</p>')+'<h3>Poznámky</h3>'+(notes||'<p class="muted">Žádné poznámky.</p>')+'</div></details>';
+ }).join('')||'<p class="muted">Zatím tu nejsou žádná uzavřená období.</p>';
+ document.getElementById('clearExpensesAndNotes').disabled=!state.expenses.length&&!state.notes.length;
+}
 document.getElementById('clearExpensesAndNotes').addEventListener('click',()=>{
- if(!confirm('Opravdu chceš smazat všechny částky, vyúčtování i poznámky této skupiny? Tuto akci nelze vrátit. Název skupiny, členové a jejich podíly zůstanou zachovány.'))return;
+ if(!state.expenses.length&&!state.notes.length)return;
+ if(!confirm('Uložit všechny výdaje a poznámky do archivu a začít nové období?'))return;
+ const dates=[...state.expenses.map(expense=>archiveDay(expense.createdAt)||archiveDay(expense.date)),
+  ...state.notes.map(note=>archiveDay(note.createdAt))].filter(Boolean).sort();
+ const entry={id:crypto.randomUUID(),closedAt:new Date().toISOString(),from:dates[0]||null,to:dates.at(-1)||null,
+  people:structuredClone(state.people),expenses:state.expenses,notes:state.notes};
+ state.archive=[...(state.archive||[]),entry];
  rememberLocalRemovals(state.expenses.map(expense=>expense.id));
  state.expenses=[];
  state.notes=[];
  resetExpenseForm();
  save();
- alert('Částky i poznámky byly smazány. Název skupiny, členové a jejich podíly zůstaly zachovány.');
+ document.getElementById('groupArchive').open=true;
 });
 
 document.getElementById('date').value=today();
@@ -1557,7 +1591,7 @@ async function pollGroupNotifications(){
   if(remoteToken!==token||activeGroupId!==id||revision!==localRevision||pendingEdits[id]?.length||remoteWrites.has(token))return;
   const data=response?.group?.data;
   if(!response.ok||!data||!Array.isArray(data.expenses)||!Array.isArray(data.people))throw new Error();
-  const incoming={name:data.name||response.group.name||state.name,people:data.people,expenses:data.expenses,notes:data.notes??[]};
+  const incoming={name:data.name||response.group.name||state.name,people:data.people,expenses:data.expenses,notes:data.notes??[],archive:Array.isArray(data.archive)?data.archive:[]};
   if(JSON.stringify(groupSnapshot(state))!==JSON.stringify(incoming)){
    if(!welcome.hidden)publishRemoteNotifications(token,incoming,state,false);
    Object.assign(state,incoming);
@@ -1625,7 +1659,7 @@ document.getElementById('shareGroup').addEventListener('click',async event=>{
    const created=await jsonp({action:'create',name:group.name});
    if(!created.ok||!created.group?.token)throw new Error(created.error||'Skupinu se nepodařilo vytvořit.');
    token=created.group.token;
-   const snapshot=()=>JSON.stringify({name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[]});
+   const snapshot=()=>JSON.stringify({name:group.name,people:group.people,expenses:group.expenses,notes:group.notes||[],archive:group.archive||[]});
    const payload=snapshot();
    const data=JSON.parse(payload);
    await postRemote(token,data);
@@ -1674,7 +1708,7 @@ async function loadSharedGroup(token,{refresh=false}={}){
  const remote=response.group, data=remote.data||{};
  const existing=database.groups.find(group=>remoteTokens[group.id]===token);
  const groupId=existing?.id||crypto.randomUUID();
- const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[])};
+ const group={id:groupId,name:data.name||remote.name||'Sdílená skupina',people:Array.isArray(data.people)?data.people:[],expenses:Array.isArray(data.expenses)?data.expenses:[],notes:Array.isArray(data.notes)?data.notes:(typeof data.notes==='string'&&data.notes.trim()?[{id:crypto.randomUUID(),text:data.notes.trim(),createdAt:new Date().toISOString()}]:[]),archive:Array.isArray(data.archive)?data.archive:[]};
  if(refresh&&existing)publishRemoteNotifications(token,data,existing,false);
  else notificationSnapshots.set(token,notificationSnapshot(group));
  if(existing)Object.assign(existing,group);else {
@@ -1745,7 +1779,7 @@ const transferStatus=document.getElementById('transferStatus');
 const transferFormat='kamaradske-uctovani-transfer';
 
 function groupHasData(group){
- return !group.placeholder||group.people.length>0||group.expenses.length>0||
+ return !group.placeholder||group.people.length>0||group.expenses.length>0||Boolean(group.archive?.length)||
   (typeof group.notes==='string'?Boolean(group.notes.trim()):Boolean(group.notes?.length));
 }
 function parseGroupTransfer(raw){
@@ -1754,6 +1788,7 @@ function parseGroupTransfer(raw){
  const groups=payload?.database?.groups;
  const tokens=payload?.remoteTokens??{};
  const identifier=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(value);
+ const validArchiveDay=day=>day===null||(typeof day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(day));
  const validGroup=group=>group&&identifier(group.id)&&typeof group.name==='string'&&
   Array.isArray(group.people)&&group.people.every(person=>person&&identifier(person.id)&&typeof person.name==='string')&&
   Array.isArray(group.expenses)&&group.expenses.every(expense=>expense&&identifier(expense.id)&&
@@ -1761,7 +1796,13 @@ function parseGroupTransfer(raw){
    Array.isArray(expense.participants)&&expense.participants.every(identifier)&&
    (expense.date==null||typeof expense.date==='string'))&&
   (group.notes==null||typeof group.notes==='string'||(Array.isArray(group.notes)&&group.notes.every(note=>
-   note&&identifier(note.id)&&typeof note.text==='string')));
+   note&&identifier(note.id)&&typeof note.text==='string')))&&
+  (group.archive==null||(Array.isArray(group.archive)&&group.archive.every(entry=>
+   entry&&identifier(entry.id)&&typeof entry.closedAt==='string'&&Number.isFinite(Date.parse(entry.closedAt))&&
+   validArchiveDay(entry.from)&&validArchiveDay(entry.to)&&
+   Array.isArray(entry.people)&&entry.people.every(person=>person&&identifier(person.id)&&typeof person.name==='string')&&
+   Array.isArray(entry.expenses)&&entry.expenses.every(expense=>expense&&typeof expense.description==='string'&&Number.isFinite(Number(expense.amount)))&&
+   Array.isArray(entry.notes)&&entry.notes.every(note=>note&&typeof note.text==='string'))));
  if(!supported||!Array.isArray(groups)||!groups.every(validGroup)||
     new Set(groups.map(group=>group.id)).size!==groups.length||
     typeof tokens!=='object'||Array.isArray(tokens)||Object.values(tokens).some(token=>
@@ -1777,7 +1818,7 @@ function mergeGroupTransfer(current,existingTokens,backup){
  const byToken=new Map(groups.filter(group=>tokens[group.id]).map(group=>[tokens[group.id],group.id]));
  const transferredIds=new Map();
  let added=0,linked=0,skipped=0;
- const fingerprint=group=>JSON.stringify([group.transferOriginalName??group.name,group.people,group.expenses,group.notes??[]]);
+ const fingerprint=group=>JSON.stringify([group.transferOriginalName??group.name,group.people,group.expenses,group.notes??[],group.archive??[]]);
 
  for(const source of backup.groups){
   const token=Object.hasOwn(backup.tokens,source.id)?backup.tokens[source.id]:'';
