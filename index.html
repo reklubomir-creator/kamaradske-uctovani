@@ -713,7 +713,7 @@ main.wrap:has(#overview:not(.hidden)):has(#quickExpense:not(.app-content-hidden)
 <section id="people" class="panel hidden"><div class="grid"><div class="card"><h2>Přidat člena</h2><form id="personForm"><div class="field"><label for="personName">Jméno</label><input id="personName" required maxlength="50" placeholder="Např. Jana"></div><button class="primary full" type="submit">Přidat člena</button></form></div><div class="card"><h2>Členové skupiny</h2><label class="field" for="memberIdentity">Moje jméno v této skupině (volitelné)<select id="memberIdentity"></select></label><div id="peopleList" class="list"></div></div></div></section>
 <footer class="footer">
   <a id="backHome" class="app-content-hidden" href="./">Úvodní obrazovka</a>
-  <span>Verze 1.10.0</span>
+  <span>Verze 1.10.1</span>
 </footer>
 <button id="quickExpense" class="primary app-content-hidden" type="button" aria-label="Přidat výdaj" title="Přidat výdaj"><span aria-hidden="true"></span></button>
 </main>
@@ -918,8 +918,8 @@ const save=()=>{
  persistDatabase();render();
  if(remoteToken)void flushEdits(state.id,remoteToken);
 };
-function sortedPeople(){return [...state.people].sort((a,b)=>a.name.localeCompare(b.name,'cs',{sensitivity:'base'}))} function balances(){const b=Object.fromEntries(state.people.map(p=>[p.id,0]));for(const e of state.expenses){if(!(e.payer in b))continue;b[e.payer]+=Number(e.amount)||0;const ids=(e.participants||[]).filter(id=>id in b);if(!ids.length)continue;const weights=ids.map(id=>{const legacy=!e.shares;const n=legacy?1:Number(e.shares[id]);return Number.isFinite(n)&&n>0?n:0});const total=weights.reduce((s,n)=>s+n,0);if(total>0)ids.forEach((id,i)=>b[id]-=(Number(e.amount)||0)*weights[i]/total)}return b}
-function settlements(){const b=balances(),debtors=state.people.map(p=>({id:p.id,name:p.name,n:-(b[p.id]||0)})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),creditors=state.people.map(p=>({id:p.id,name:p.name,n:b[p.id]||0})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),out=[];let i=0,j=0;while(i<debtors.length&&j<creditors.length){let n=Math.min(debtors[i].n,creditors[j].n);out.push({from:debtors[i].name,to:creditors[j].name,amount:n});debtors[i].n-=n;creditors[j].n-=n;if(debtors[i].n<.01)i++;if(creditors[j].n<.01)j++}return out}
+function sortedPeople(){return [...state.people].sort((a,b)=>a.name.localeCompare(b.name,'cs',{sensitivity:'base'}))} function balances(group=state){const b=Object.fromEntries(group.people.map(p=>[p.id,0]));for(const e of group.expenses){if(!(e.payer in b))continue;b[e.payer]+=Number(e.amount)||0;const ids=(e.participants||[]).filter(id=>id in b);if(!ids.length)continue;const weights=ids.map(id=>{const legacy=!e.shares;const n=legacy?1:Number(e.shares[id]);return Number.isFinite(n)&&n>0?n:0});const total=weights.reduce((s,n)=>s+n,0);if(total>0)ids.forEach((id,i)=>b[id]-=(Number(e.amount)||0)*weights[i]/total)}return b}
+function settlements(group=state){const b=balances(group),debtors=group.people.map(p=>({id:p.id,name:p.name,n:-(b[p.id]||0)})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),creditors=group.people.map(p=>({id:p.id,name:p.name,n:b[p.id]||0})).filter(x=>x.n>.005).sort((a,b)=>b.n-a.n),out=[];let i=0,j=0;while(i<debtors.length&&j<creditors.length){let n=Math.min(debtors[i].n,creditors[j].n);out.push({from:debtors[i].name,to:creditors[j].name,amount:n});debtors[i].n-=n;creditors[j].n-=n;if(debtors[i].n<.01)i++;if(creditors[j].n<.01)j++}return out}
 function expenseMarkup(expense){
  const e=expense;
  const p=state.people.find(p=>p.id===e.payer);const ids=(e.participants||[]).filter(id=>state.people.some(person=>person.id===id));const parts=ids.map(id=>{const person=state.people.find(person=>person.id===id);const raw=e.shares?Number(e.shares[id]):1;return {id,name:person?.name||'Neznámý člen',weight:Number.isFinite(raw)&&raw>0?raw:0}});const total=parts.reduce((sum,x)=>sum+x.weight,0);const breakdown=parts.length&&total>0?'<details style="margin-top:8px"><summary class="expense-breakdown-toggle" style="cursor:pointer;color:var(--green);font-size:13px;font-weight:700">Zobrazit podíly</summary><div class="list" style="margin-top:6px">'+parts.map(x=>'<div class="item" style="padding:7px 0"><span>'+esc(x.name)+' <span class="muted">· podíl '+String(x.weight).replace('.',',')+'</span></span><strong class="amount">'+money((Number(e.amount)||0)*x.weight/total)+'</strong></div>').join('')+'</div></details>':'';
@@ -1309,10 +1309,18 @@ function renderGroupArchive(){
   const dates=[entry.from,entry.to].filter(Boolean).map(formatArchiveDay);
   const period=dates.length===2?'Od '+dates[0]+' do '+dates[1]:'Datum zápisu není dostupné';
   const people=new Map(entry.people.map(person=>[person.id,person.name]));
+  const members=entry.people.map(person=>{
+   const share=Number(person.share);
+   const weight=Number.isFinite(share)&&share>0?share:1;
+   return '<div class="item"><span>'+esc(person.name)+'</span><span class="muted">Podíl '+weight.toLocaleString('cs-CZ')+'</span></div>';
+  }).join('');
+  const payments=settlements(entry).map(payment=>
+   '<div class="item"><span>'+esc(payment.from)+' → '+esc(payment.to)+'</span><strong class="amount">'+money(payment.amount)+'</strong></div>'
+  ).join('');
   const total=entry.expenses.reduce((sum,expense)=>sum+Number(expense.amount),0);
   const expenses=entry.expenses.map(expense=>'<div class="item"><div><div class="item-title">'+esc(expense.description)+'</div><div class="muted">'+esc([people.get(expense.payer),archiveDay(expense.date)&&formatArchiveDay(archiveDay(expense.date))].filter(Boolean).join(' · '))+'</div></div><strong class="amount">'+money(expense.amount)+'</strong></div>').join('');
   const notes=entry.notes.map(note=>'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(note.text)+'</p>').join('');
-  return '<details class="delete-disclosure" data-archive-id="'+esc(entry.id)+'"'+(open.has(entry.id)?' open':'')+'><summary>'+esc(period)+' · '+money(total)+'</summary><div class="delete-disclosure-content"><p class="muted">'+esc(period)+' · Uzavřeno '+formatArchiveDay(archiveDay(entry.closedAt))+'</p><h3>Výdaje</h3>'+(expenses||'<p class="muted">Žádné výdaje.</p>')+'<h3>Poznámky</h3>'+(notes||'<p class="muted">Žádné poznámky.</p>')+'</div></details>';
+  return '<details class="delete-disclosure" data-archive-id="'+esc(entry.id)+'"'+(open.has(entry.id)?' open':'')+'><summary>'+esc(period)+' · '+money(total)+'</summary><div class="delete-disclosure-content"><p class="muted">'+esc(period)+' · Uzavřeno '+formatArchiveDay(archiveDay(entry.closedAt))+'</p><h3>Členové a jejich podíly</h3>'+(members||'<p class="muted">Žádní členové.</p>')+'<h3>Navržené platby</h3>'+(payments||'<p class="muted">Není co vyrovnávat.</p>')+'<h3>Výdaje</h3>'+(expenses||'<p class="muted">Žádné výdaje.</p>')+'<h3>Poznámky</h3>'+(notes||'<p class="muted">Žádné poznámky.</p>')+'</div></details>';
  }).join('')||'<p class="muted">Zatím tu nejsou žádná uzavřená období.</p>';
  document.getElementById('clearExpensesAndNotes').disabled=!state.expenses.length&&!state.notes.length;
 }
